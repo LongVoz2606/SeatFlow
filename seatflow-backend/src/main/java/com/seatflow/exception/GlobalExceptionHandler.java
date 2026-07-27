@@ -1,6 +1,7 @@
 package com.seatflow.exception;
 
-import com.seatflow.dto.response.ApiResponse;
+import com.seatflow.bootstrap.constants.ErrorCodes;
+import com.seatflow.bootstrap.response.ValueResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -14,37 +15,37 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(ResourceNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(ex.getMessage()));
+    public ResponseEntity<ValueResponse<Void>> handleResourceNotFound(ResourceNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ValueResponse.of(404, ex.getMessage(), null));
     }
 
     @ExceptionHandler(SeatUnavailableException.class)
-    public ResponseEntity<ApiResponse<Void>> handleSeatUnavailable(SeatUnavailableException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(ex.getMessage()));
+    public ResponseEntity<ValueResponse<Void>> handleSeatUnavailable(SeatUnavailableException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ValueResponse.of(409, ex.getMessage(), null));
     }
 
     @ExceptionHandler(IdempotencyException.class)
-    public ResponseEntity<ApiResponse<Void>> handleIdempotency(IdempotencyException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(ex.getMessage()));
+    public ResponseEntity<ValueResponse<Void>> handleIdempotency(IdempotencyException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ValueResponse.of(409, ex.getMessage(), null));
     }
 
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
-    public ResponseEntity<ApiResponse<Void>> handleOptimisticLockFailure(ObjectOptimisticLockingFailureException ex) {
+    public ResponseEntity<ValueResponse<Void>> handleOptimisticLockFailure(ObjectOptimisticLockingFailureException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(ApiResponse.error("Ghế bạn chọn đang được người khác thao tác cùng lúc. Vui lòng thử lại."));
+                .body(ValueResponse.of(409, ErrorCodes.SYSTEM_CONCURRENCY_BUSY.getMessage(), null));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Void>> handleValidationException(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ValueResponse<Void>> handleValidationException(MethodArgumentNotValidException ex) {
         String errorMsg = ex.getBindingResult().getFieldErrors().stream()
                 .map(err -> err.getField() + ": " + err.getDefaultMessage())
                 .collect(Collectors.joining(", "));
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(errorMsg));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ValueResponse.of(400, errorMsg, null));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Void>> handleGeneralException(Exception ex) {
+    public ResponseEntity<ValueResponse<Void>> handleGeneralException(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("Lỗi hệ thống: " + ex.getMessage()));
+                .body(ValueResponse.of(500, "Lỗi hệ thống: " + ex.getMessage(), null));
     }
 }

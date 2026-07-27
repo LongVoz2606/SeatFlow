@@ -19,7 +19,7 @@ if not exist "%WRAPPER_JAR%" (
 )
 
 if exist "%WRAPPER_JAR%" (
-    java -cp "%WRAPPER_JAR%" org.apache.maven.wrapper.MavenWrapperMain %*
+    java "-Dmaven.multiModuleProjectDirectory=%MAVEN_PROJECTBASEDIR%" -cp "%WRAPPER_JAR%" org.apache.maven.wrapper.MavenWrapperMain %*
     goto end
 )
 
