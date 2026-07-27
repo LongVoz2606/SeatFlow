@@ -113,3 +113,10 @@ yarn-error.log*
 pnpm-debug.log*
 temp/
 scratch/
+
+# ==========================================
+# Agent & Assistant Local Files
+# ==========================================
+.agents/
+CLAUDE.md
+ke-hoach-du-an-dat-ve.md
