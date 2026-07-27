@@ -49,12 +49,12 @@ export const Header: React.FC = () => {
 
           {username ? (
             <div className="flex items-center gap-3 border-l border-slate-800 pl-4">
-              <div className="flex items-center gap-1.5 text-sm font-medium text-slate-200">
+              <Link to="/profile" className="flex items-center gap-1.5 text-sm font-medium text-slate-200 hover:text-cyan-400 transition-colors">
                 <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400">
                   <User className="w-3.5 h-3.5" />
                 </div>
                 <span>{username}</span>
-              </div>
+              </Link>
               <button
                 onClick={handleLogout}
                 className="p-1.5 rounded-lg border border-slate-800 hover:bg-slate-900 text-slate-400 hover:text-rose-400 transition-colors"

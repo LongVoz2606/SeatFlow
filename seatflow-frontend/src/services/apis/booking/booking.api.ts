@@ -31,4 +31,12 @@ export default {
       ...params,
     });
   },
+
+  getMyBookings(params?: IApiRequestParams<null, null, null>): Promise<IApiResponse<IBooking[]>> {
+    return apiService({
+      url: '/bookings/my',
+      method: 'GET',
+      ...params,
+    });
+  },
 };

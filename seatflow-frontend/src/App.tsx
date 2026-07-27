@@ -6,6 +6,7 @@ import { EventListPage } from './pages/event-list';
 import { EventDetailPage } from './pages/event-detail';
 import { BookingConfirmPage } from './pages/booking-confirm';
 import { LoginPage } from './pages/login';
+import { ProfilePage } from './pages/profile';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,6 +27,7 @@ export const App: React.FC = () => {
             <Routes>
               <Route path="/" element={<EventListPage />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
               <Route path="/events/:id" element={<EventDetailPage />} />
               <Route path="/bookings/:bookingCode" element={<BookingConfirmPage />} />
             </Routes>
