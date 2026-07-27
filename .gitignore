@@ -118,5 +118,6 @@ scratch/
 # Agent & Assistant Local Files
 # ==========================================
 .agents/
+.claude/
 CLAUDE.md
 ke-hoach-du-an-dat-ve.md
