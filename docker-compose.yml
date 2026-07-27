@@ -19,7 +19,43 @@ services:
       timeout: 5s
       retries: 5
 
-  # 2. Redis Cache & Redisson Lock Server
+  # 2. Database Migration DDL Container (Flyway App)
+  migration-app:
+    build:
+      context: ./seatflow-migration/app
+      dockerfile: Dockerfile
+    container_name: seatflow-migration-app
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/seatflow_db
+      FLYWAY_USER: postgres
+      FLYWAY_PASSWORD: postgres
+      FLYWAY_LOCATIONS: filesystem:sql/postgres
+      FLYWAY_SCHEMAS: public
+      FLYWAY_TABLE: flyway_schema_history
+    command: ["mvn", "flyway:info", "flyway:migrate", "-Dflyway.url=jdbc:postgresql://postgres:5432/seatflow_db", "-Dflyway.user=postgres", "-Dflyway.password=postgres", "-Dflyway.locations=filesystem:sql/postgres", "-Dflyway.schemas=public", "-Dflyway.table=flyway_schema_history"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # 3. Database Migration DML Container (Flyway Data Seed)
+  migration-data:
+    build:
+      context: ./seatflow-migration/data
+      dockerfile: Dockerfile
+    container_name: seatflow-migration-data
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/seatflow_db
+      FLYWAY_USER: postgres
+      FLYWAY_PASSWORD: postgres
+      FLYWAY_LOCATIONS: filesystem:sql/postgres
+      FLYWAY_SCHEMAS: public
+      FLYWAY_TABLE: flyway_schema_history_data
+    command: ["mvn", "flyway:info", "flyway:migrate", "-Dflyway.url=jdbc:postgresql://postgres:5432/seatflow_db", "-Dflyway.user=postgres", "-Dflyway.password=postgres", "-Dflyway.locations=filesystem:sql/postgres", "-Dflyway.schemas=public", "-Dflyway.table=flyway_schema_history_data"]
+    depends_on:
+      migration-app:
+        condition: service_completed_successfully
+
+  # 4. Redis Cache & Redisson Lock Server
   redis:
     image: redis:7-alpine
     container_name: seatflow-redis
@@ -34,7 +70,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # 3. Apache Kafka (KRaft Mode)
+  # 5. Apache Kafka (KRaft Mode)
   kafka:
     image: apache/kafka:3.7.0
     container_name: seatflow-kafka
@@ -61,14 +97,14 @@ services:
       timeout: 10s
       retries: 5
 
-  # 4. Zipkin Distributed Tracing Server
+  # 6. Zipkin Distributed Tracing Server
   zipkin:
     image: openzipkin/zipkin:3
     container_name: seatflow-zipkin
     ports:
       - "9411:9411"
 
-  # 5. Spring Boot 3 Backend Service
+  # 7. Spring Boot 3 Backend Service
   backend:
     build:
       context: ./seatflow-backend
@@ -84,9 +120,12 @@ services:
       SPRING_REDIS_PORT: 6379
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SEATFLOW_REDISSON_ADDRESS: redis://redis:6379
+      SPRING_FLYWAY_ENABLED: "false"
     depends_on:
       postgres:
         condition: service_healthy
+      migration-data:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
       kafka:
