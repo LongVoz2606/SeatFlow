@@ -41,6 +41,7 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: maven
+          cache-dependency-path: ./seatflow-backend/pom.xml
 
       - name: Grant Execute Permission for Maven Wrapper
         run: chmod +x seatflow-backend/mvnw
