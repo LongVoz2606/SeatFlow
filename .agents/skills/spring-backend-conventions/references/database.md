@@ -124,3 +124,127 @@ public record CacheGroupPermission(@Id String id, String groupCode, String permi
 
 - Đổi schema phải kèm script migration, không dựa vào `ddl-auto` sinh bảng ở môi trường triển khai.
 - Đổi/xoá cột: triển khai theo 2 bước (thêm mới + backfill, rồi mới bỏ cột cũ) để không gãy phiên bản đang chạy.
+
+## Tách biệt Database Migration (`<service>-migration`) & Containerized Flyway
+
+Để đảm bảo hiệu năng, tính độc lập và tránh tranh chấp lock/quyền giữa nhiều replica của microservice backend (`<service>-service`), cơ chế Migration được tách hẳn ra thành dự án/container riêng (`<service>-migration`).
+
+### Structure tiêu chuẩn của `<service>-migration`
+
+```
+<service>-migration/
+├── app/                        # Migration DDL cho cấu trúc schema/bảng
+│   ├── Dockerfile
+│   ├── pom.xml                 # Maven plugin flyway-maven-plugin + JDBC driver (PostgreSQL/Oracle)
+│   ├── config/
+│   │   └── flyway.properties
+│   └── sql/
+│       └── postgres/           # (hoặc oracle/)
+│           ├── V20250930_01__ddl_constraint.sql
+│           ├── V20250930_02__ddl_property.sql
+│           └── V20260126_01__ddl_update_table.sql
+├── data/                       # Migration DML cho dữ liệu khởi tạo / reference data
+│   ├── Dockerfile
+│   ├── pom.xml
+│   └── sql/
+│       └── postgres/
+│           └── V20251001_01__dml_seed_data.sql
+└── .gitlab-ci.yml / README.md  # CI/CD pipeline & hướng dẫn containerized run
+```
+
+### Quy tắc đặt tên & quản lý script SQL Migration
+
+1. **Format tên file SQL**: `V<YYYYMMDD_seq>__<type>_<description>.sql`
+   - `V` prefix cho versioned migration.
+   - `<YYYYMMDD_seq>`: ngày tháng + số thứ tự trong ngày (ví dụ `V20260727_01__...`, `V20260727_02__...`).
+   - `<type>`: `ddl` (cho `app/`) hoặc `dml` (cho `data/`).
+   - `<description>`: mô tả rõ ràng mục đích (ví dụ `ddl_user.sql`, `dml_seed_roles.sql`, `ddl_update_table_users.sql`).
+2. **Phân tách DDL (`app`) và DML (`data`)**:
+   - `app/` chạy với bảng lịch sử `flyway_schema_history`.
+   - `data/` chạy với bảng lịch sử riêng `flyway_schema_history_data` (qua `-Dflyway.table=flyway_schema_history_data`).
+
+### Cấu hình `pom.xml` cho Migration Project
+
+```xml
+<dependencies>
+    <dependency>
+        <groupId>org.flywaydb</groupId>
+        <artifactId>flyway-core</artifactId>
+        <version>7.11.2</version>
+    </dependency>
+    <!-- Driver PostgreSQL -->
+    <dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>42.3.0</version>
+    </dependency>
+    <!-- Hoặc Driver Oracle -->
+    <!--
+    <dependency>
+        <groupId>com.oracle.database.jdbc</groupId>
+        <artifactId>ojdbc11</artifactId>
+        <version>23.3.0.23.09</version>
+    </dependency>
+    -->
+</dependencies>
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-maven-plugin</artifactId>
+            <version>7.11.2</version>
+            <configuration>
+                <baselineOnMigrate>true</baselineOnMigrate>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+```
+
+### Containerized Execution với Docker & CI/CD
+
+#### Dockerfile cho Migration Image
+
+```dockerfile
+FROM 10.0.0.175:5000/migration:1.0.0
+WORKDIR /app
+
+COPY sql /app/sql/postgres
+COPY config /app/config
+COPY pom.xml /app/
+
+RUN mvn clean install
+RUN mvn flyway:info || true
+```
+
+#### Lệnh chạy Container Migration (Standalone / CLI)
+
+- **Xem thông tin trạng thái Migration (`flyway:info`)**:
+  ```bash
+  docker run --rm migration-postgres-app:latest \
+    mvn -Dflyway.url="jdbc:postgresql://<db_host>:<port>/<db_name>" \
+    -Dflyway.user="postgres" \
+    -Dflyway.password='<db_password>' \
+    -Dflyway.locations="filesystem:sql/postgres" \
+    -Dflyway.schemas="public" \
+    -Dflyway.table="flyway_schema_history" \
+    flyway:info
+  ```
+
+- **Thực thi Migration Schema (`flyway:migrate`)**:
+  ```bash
+  docker run --rm migration-postgres-app:latest \
+    mvn -Dflyway.url="jdbc:postgresql://<db_host>:<port>/<db_name>" \
+    -Dflyway.user="postgres" \
+    -Dflyway.password='<db_password>' \
+    -Dflyway.locations="filesystem:sql/postgres" \
+    -Dflyway.schemas="public" \
+    -Dflyway.table="flyway_schema_history" \
+    flyway:info flyway:migrate
+  ```
+
+#### Quy trình triển khai sản xuất
+1. Trong môi trường CI/CD hoặc Production, bước **Migration Container** chạy hoàn tất trước (`flyway:migrate` thành công).
+2. Sau khi Schema & Seed Data đã sẵn sàng, Backend Application Container (`<service>-service`) mới bắt đầu rollout/start up.
+3. Backend service bật `spring.jpa.hibernate.ddl-auto=validate` hoặc `none` để đảm bảo an toàn tuyệt đối cho dữ liệu.
