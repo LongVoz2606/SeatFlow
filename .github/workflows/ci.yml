@@ -43,9 +43,6 @@ jobs:
           cache: maven
           cache-dependency-path: ./seatflow-backend/pom.xml
 
-      - name: Grant Execute Permission for Maven Wrapper
-        run: chmod +x seatflow-backend/mvnw
-
       - name: Build & Run Tests
         working-directory: ./seatflow-backend
         env:
@@ -54,7 +51,7 @@ jobs:
           SPRING_DATASOURCE_PASSWORD: postgres
           SPRING_REDIS_HOST: localhost
           SPRING_REDIS_PORT: 6379
-        run: ./mvnw clean test -B
+        run: mvn clean test -B
 
   frontend-build-lint:
     name: Build & Verify Frontend (React + Vite + TypeScript)
