@@ -1,0 +1,61 @@
+spring:
+  application:
+    name: booking-service
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/seatflow_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    table: flyway_schema_history_booking
+
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}
+      timeout: 3000ms
+
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+server:
+  port: ${SERVER_PORT:8084}
+
+seatflow:
+  jwt:
+    secret: ${JWT_SECRET:seatflow-super-secret-key-for-jwt-signing-must-be-at-least-256-bits}
+    access-token-expiry-ms: ${JWT_EXPIRY_MS:86400000}
+  booking:
+    hold-duration-minutes: ${BOOKING_HOLD_MINUTES:5}
+  event-service:
+    url: ${EVENT_SERVICE_URL:http://localhost:8083}
+  redisson:
+    address: redis://${SPRING_REDIS_HOST:localhost}:${SPRING_REDIS_PORT:6379}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

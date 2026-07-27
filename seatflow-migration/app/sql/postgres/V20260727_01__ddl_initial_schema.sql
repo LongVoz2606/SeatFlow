@@ -77,6 +77,6 @@ CREATE TABLE IF NOT EXISTS outbox_events (
 
 -- Indexes for performance & high-concurrency queries
 CREATE INDEX IF NOT EXISTS idx_seats_event_status ON seats(event_id, status);
-CREATE INDEX IF NOT EXISTS idx_seats_held_until ON seats(held_until) WHERE status = 'HELD';
+CREATE INDEX IF NOT EXISTS idx_seats_held_until ON seats(held_until, status);
 CREATE INDEX IF NOT EXISTS idx_bookings_user ON bookings(user_id);
 CREATE INDEX IF NOT EXISTS idx_outbox_status ON outbox_events(status);

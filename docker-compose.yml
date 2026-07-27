@@ -1,7 +1,8 @@
 version: '3.8'
 
 services:
-  # 1. PostgreSQL Database
+  # ─── Infrastructure ───────────────────────────────────────────────────────────
+
   postgres:
     image: postgres:16-alpine
     container_name: seatflow-postgres
@@ -19,43 +20,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # 2. Database Migration DDL Container (Flyway App)
-  migration-app:
-    build:
-      context: ./seatflow-migration/app
-      dockerfile: Dockerfile
-    container_name: seatflow-migration-app
-    environment:
-      FLYWAY_URL: jdbc:postgresql://postgres:5432/seatflow_db
-      FLYWAY_USER: postgres
-      FLYWAY_PASSWORD: postgres
-      FLYWAY_LOCATIONS: filesystem:sql/postgres
-      FLYWAY_SCHEMAS: public
-      FLYWAY_TABLE: flyway_schema_history
-    command: ["mvn", "flyway:info", "flyway:migrate", "-Dflyway.url=jdbc:postgresql://postgres:5432/seatflow_db", "-Dflyway.user=postgres", "-Dflyway.password=postgres", "-Dflyway.locations=filesystem:sql/postgres", "-Dflyway.schemas=public", "-Dflyway.table=flyway_schema_history"]
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  # 3. Database Migration DML Container (Flyway Data Seed)
-  migration-data:
-    build:
-      context: ./seatflow-migration/data
-      dockerfile: Dockerfile
-    container_name: seatflow-migration-data
-    environment:
-      FLYWAY_URL: jdbc:postgresql://postgres:5432/seatflow_db
-      FLYWAY_USER: postgres
-      FLYWAY_PASSWORD: postgres
-      FLYWAY_LOCATIONS: filesystem:sql/postgres
-      FLYWAY_SCHEMAS: public
-      FLYWAY_TABLE: flyway_schema_history_data
-    command: ["mvn", "flyway:info", "flyway:migrate", "-Dflyway.url=jdbc:postgresql://postgres:5432/seatflow_db", "-Dflyway.user=postgres", "-Dflyway.password=postgres", "-Dflyway.locations=filesystem:sql/postgres", "-Dflyway.schemas=public", "-Dflyway.table=flyway_schema_history_data"]
-    depends_on:
-      migration-app:
-        condition: service_completed_successfully
-
-  # 4. Redis Cache & Redisson Lock Server
   redis:
     image: redis:7-alpine
     container_name: seatflow-redis
@@ -70,7 +34,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # 5. Apache Kafka (KRaft Mode)
   kafka:
     image: apache/kafka:3.7.0
     container_name: seatflow-kafka
@@ -97,41 +60,123 @@ services:
       timeout: 10s
       retries: 5
 
-  # 6. Zipkin Distributed Tracing Server
   zipkin:
     image: openzipkin/zipkin:3
     container_name: seatflow-zipkin
     ports:
       - "9411:9411"
 
-  # 7. Spring Boot 3 Backend Service
-  backend:
+  # ─── Microservices ────────────────────────────────────────────────────────────
+
+  auth-service:
     build:
-      context: ./seatflow-backend
+      context: ./seatflow-backend/auth-service
       dockerfile: Dockerfile
-    container_name: seatflow-backend
+    container_name: seatflow-auth-service
     ports:
-      - "8080:8080"
+      - "8081:8081"
     environment:
+      SERVER_PORT: 8081
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/seatflow_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      JWT_SECRET: seatflow-super-secret-key-for-jwt-signing-must-be-at-least-256-bits
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  user-service:
+    build:
+      context: ./seatflow-backend/user-service
+      dockerfile: Dockerfile
+    container_name: seatflow-user-service
+    ports:
+      - "8082:8082"
+    environment:
+      SERVER_PORT: 8082
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/seatflow_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      JWT_SECRET: seatflow-super-secret-key-for-jwt-signing-must-be-at-least-256-bits
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  event-service:
+    build:
+      context: ./seatflow-backend/event-service
+      dockerfile: Dockerfile
+    container_name: seatflow-event-service
+    ports:
+      - "8083:8083"
+    environment:
+      SERVER_PORT: 8083
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/seatflow_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      JWT_SECRET: seatflow-super-secret-key-for-jwt-signing-must-be-at-least-256-bits
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  booking-service:
+    build:
+      context: ./seatflow-backend/booking-service
+      dockerfile: Dockerfile
+    container_name: seatflow-booking-service
+    ports:
+      - "8084:8084"
+    environment:
+      SERVER_PORT: 8084
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/seatflow_db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      SEATFLOW_REDISSON_ADDRESS: redis://redis:6379
-      SPRING_FLYWAY_ENABLED: "false"
+      JWT_SECRET: seatflow-super-secret-key-for-jwt-signing-must-be-at-least-256-bits
+      EVENT_SERVICE_URL: http://event-service:8083
+      BOOKING_HOLD_MINUTES: 5
     depends_on:
       postgres:
         condition: service_healthy
-      migration-data:
-        condition: service_completed_successfully
       redis:
         condition: service_healthy
       kafka:
         condition: service_started
+      event-service:
+        condition: service_started
 
-  # 6. React Vite Frontend App
+  payment-service:
+    build:
+      context: ./seatflow-backend/payment-service
+      dockerfile: Dockerfile
+    container_name: seatflow-payment-service
+    ports:
+      - "8085:8085"
+    environment:
+      SERVER_PORT: 8085
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/seatflow_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JWT_SECRET: seatflow-super-secret-key-for-jwt-signing-must-be-at-least-256-bits
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+
+  # ─── Frontend & Gateway ───────────────────────────────────────────────────────
+
   frontend:
     build:
       context: ./seatflow-frontend
@@ -139,10 +184,7 @@ services:
     container_name: seatflow-frontend
     ports:
       - "3000:80"
-    depends_on:
-      - backend
 
-  # 7. Nginx Reverse Proxy / API Gateway
   gateway:
     image: nginx:alpine
     container_name: seatflow-gateway
@@ -151,7 +193,9 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - backend
+      - auth-service
+      - event-service
+      - booking-service
       - frontend
 
 volumes:

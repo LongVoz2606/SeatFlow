@@ -2,9 +2,10 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Header } from './components/Header';
-import { EventList } from './pages/EventList';
-import { EventDetail } from './pages/EventDetail';
-import { BookingConfirm } from './pages/BookingConfirm';
+import { EventListPage } from './pages/event-list';
+import { EventDetailPage } from './pages/event-detail';
+import { BookingConfirmPage } from './pages/booking-confirm';
+import { LoginPage } from './pages/login';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,12 +24,13 @@ export const App: React.FC = () => {
           <Header />
           <main className="flex-1">
             <Routes>
-              <Route path="/" element={<EventList />} />
-              <Route path="/events/:id" element={<EventDetail />} />
-              <Route path="/bookings/:bookingCode" element={<BookingConfirm />} />
+              <Route path="/" element={<EventListPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/events/:id" element={<EventDetailPage />} />
+              <Route path="/bookings/:bookingCode" element={<BookingConfirmPage />} />
             </Routes>
           </main>
-          <footer className="py-6 border-t border-slate-900 text-center text-xs text-slate-500">
+          <footer className="py-6 border-t border-slate-900 text-center text-xs text-slate-500 bg-slate-950">
             SeatFlow © 2026 High-Concurrency Event Booking System. Built with Java 21, Spring Boot 3, React & Redisson.
           </footer>
         </div>

@@ -1,19 +1,19 @@
-export type SeatStatus = 'AVAILABLE' | 'HELD' | 'BOOKED';
-export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'EXPIRED';
+export type ESeatStatus = 'AVAILABLE' | 'HELD' | 'BOOKED';
+export type EBookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'EXPIRED';
 
-export interface Seat {
+export interface ISeat {
   id: number;
   eventId: number;
   seatNumber: string;
   seatRow: string;
   seatType: string;
   price: number;
-  status: SeatStatus;
+  status: ESeatStatus;
   heldUntil?: string;
   heldByUserId?: number;
 }
 
-export interface Event {
+export interface IEvent {
   id: number;
   title: string;
   description: string;
@@ -23,23 +23,23 @@ export interface Event {
   totalSeats: number;
   availableSeats: number;
   status: string;
-  seats?: Seat[];
+  seats?: ISeat[];
 }
 
-export interface Booking {
+export interface IBooking {
   id: number;
   bookingCode: string;
   userId: number;
   eventId: number;
   eventTitle: string;
-  status: BookingStatus;
+  status: EBookingStatus;
   totalAmount: number;
   expiresAt: string;
   createdAt: string;
-  reservedSeats: Seat[];
+  seats: ISeat[];
 }
 
-export interface ApiResponse<T> {
+export interface IApiResponse<T> {
   success: boolean;
   message: string;
   data: T;

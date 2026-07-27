@@ -1,0 +1,61 @@
+package com.seatflow.event.dto;
+
+import java.math.BigDecimal;
+import java.time.ZonedDateTime;
+import java.util.List;
+
+public class EventDtos {
+
+    public record EventResponse(
+            Long id,
+            String title,
+            String description,
+            String location,
+            ZonedDateTime eventDate,
+            String bannerUrl,
+            Integer totalSeats,
+            Integer availableSeats,
+            String status,
+            ZonedDateTime createdAt
+    ) {}
+
+    public record SeatResponse(
+            Long id,
+            Long eventId,
+            String seatNumber,
+            String seatRow,
+            String seatType,
+            BigDecimal price,
+            String status
+    ) {}
+
+    public record EventDetailResponse(
+            Long id,
+            String title,
+            String description,
+            String location,
+            ZonedDateTime eventDate,
+            String bannerUrl,
+            Integer totalSeats,
+            Integer availableSeats,
+            String status,
+            List<SeatResponse> seats
+    ) {}
+
+    // Internal API DTOs (used by booking-service via Feign)
+    public record HoldSeatsRequest(
+            Long userId,
+            List<Long> seatIds,
+            int holdDurationMinutes
+    ) {}
+
+    public record HoldSeatsResponse(
+            boolean success,
+            List<SeatResponse> heldSeats,
+            String message
+    ) {}
+
+    public record ConfirmSeatsRequest(
+            List<Long> seatIds
+    ) {}
+}
