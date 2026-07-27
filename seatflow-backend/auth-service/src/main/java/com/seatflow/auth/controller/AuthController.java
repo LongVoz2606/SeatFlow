@@ -3,6 +3,7 @@ package com.seatflow.auth.controller;
 import com.seatflow.auth.dto.AuthDtos;
 import com.seatflow.auth.service.AuthService;
 import com.seatflow.common.response.ApiResponse;
+import com.seatflow.common.response.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -47,5 +48,23 @@ public class AuthController {
                     .body(ApiResponse.error("UNAUTHORIZED", "Bạn chưa đăng nhập."));
         }
         return ResponseEntity.ok(ApiResponse.ok(authService.getMyInfo(userId)));
+    }
+
+    @GetMapping("/users")
+    @Operation(summary = "[Admin] Danh sách người dùng (tìm kiếm & phân trang)")
+    public ResponseEntity<ApiResponse<PageResponse<AuthDtos.AdminUserResponse>>> getAllUsers(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(ApiResponse.ok(authService.findAllUsers(search, page, size)));
+    }
+
+    @PatchMapping("/users/{id}/status")
+    @Operation(summary = "[Admin] Khoá/Mở tài khoản người dùng")
+    public ResponseEntity<ApiResponse<Void>> updateUserStatus(
+            @PathVariable Long id,
+            @RequestBody AuthDtos.UpdateUserStatusRequest request) {
+        authService.setUserEnabled(id, Boolean.TRUE.equals(request.enabled()));
+        return ResponseEntity.ok(ApiResponse.ok(null, "Cập nhật trạng thái tài khoản thành công."));
     }
 }

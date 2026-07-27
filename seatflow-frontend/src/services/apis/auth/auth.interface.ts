@@ -26,3 +26,19 @@ export interface IUserInfoResponse {
   fullName: string;
   role: string;
 }
+
+export interface IAdminUser {
+  id: number;
+  username: string;
+  email: string;
+  fullName: string;
+  role: string;
+  enabled: boolean;
+  createdAt: string;
+}
+
+export interface IAdminUserQuery {
+  search?: string;
+  page?: number;
+  size?: number;
+}

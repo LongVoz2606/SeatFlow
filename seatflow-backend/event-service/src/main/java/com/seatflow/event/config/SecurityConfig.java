@@ -6,6 +6,7 @@ import com.seatflow.common.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -45,8 +46,18 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Internal service-to-service calls (booking-service Feign client, không kèm JWT)
+                        .requestMatchers(HttpMethod.POST, "/api/events/*/seats/hold").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/events/*/seats/confirm").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/organizers/pending").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/organizers/me").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/organizers").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/organizers/*").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/api/events/*/hot").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/organizers/*/approve").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/organizers/*/reject").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(
-                                "/api/events/**",   // public: GET events
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",

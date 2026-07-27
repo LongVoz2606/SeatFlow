@@ -13,11 +13,14 @@ import com.seatflow.booking.repository.OutboxEventRepository;
 import com.seatflow.common.exception.BusinessException;
 import com.seatflow.common.exception.ResourceNotFoundException;
 import com.seatflow.common.response.ApiResponse;
+import com.seatflow.common.response.PageResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -170,6 +173,20 @@ public class BookingService {
     public List<BookingDtos.BookingResponse> findMyBookings(Long userId) {
         return bookingRepository.findByUserIdOrderByCreatedAtDesc(userId)
                 .stream().map(b -> toResponse(b, List.of(), "")).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public BookingDtos.AdminBookingListResponse findAllForAdmin(int page, int size) {
+        Page<BookingEntity> result = bookingRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(page, size));
+        List<BookingDtos.AdminBookingResponse> content = result.getContent().stream()
+                .map(b -> new BookingDtos.AdminBookingResponse(
+                        b.getId(), b.getBookingCode(), b.getUserId(), b.getEventId(),
+                        b.getStatus(), b.getTotalAmount(), b.getCreatedAt()))
+                .toList();
+        PageResponse<BookingDtos.AdminBookingResponse> pageResponse =
+                PageResponse.of(content, page, size, result.getTotalElements());
+        BigDecimal totalRevenue = bookingRepository.sumTotalAmountByStatus(BookingStatus.CONFIRMED);
+        return new BookingDtos.AdminBookingListResponse(pageResponse, totalRevenue);
     }
 
     /** Auto-expire pending bookings every 10 seconds */

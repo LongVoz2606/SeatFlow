@@ -1,6 +1,8 @@
 package com.seatflow.auth.repository;
 
 import com.seatflow.auth.entity.AuthUserEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,4 +18,7 @@ public interface AuthUserRepository extends JpaRepository<AuthUserEntity, Long> 
     boolean existsByUsername(String username);
 
     boolean existsByEmail(String email);
+
+    Page<AuthUserEntity> findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(
+            String username, String email, Pageable pageable);
 }

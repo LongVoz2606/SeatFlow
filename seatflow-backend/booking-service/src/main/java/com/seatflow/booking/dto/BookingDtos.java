@@ -52,4 +52,19 @@ public class BookingDtos {
             List<SeatInfo> seats,
             ZonedDateTime createdAt
     ) {}
+
+    public record AdminBookingResponse(
+            Long id,
+            String bookingCode,
+            Long userId,
+            Long eventId,
+            BookingStatus status,
+            BigDecimal totalAmount,
+            ZonedDateTime createdAt
+    ) {}
+
+    public record AdminBookingListResponse(
+            com.seatflow.common.response.PageResponse<AdminBookingResponse> page,
+            BigDecimal totalRevenue
+    ) {}
 }

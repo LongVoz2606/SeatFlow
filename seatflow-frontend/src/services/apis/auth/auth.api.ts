@@ -1,6 +1,6 @@
 import { apiService, IApiRequestParams } from '../index';
-import { IApiResponse } from '../../../types';
-import { ILoginRequest, IRegisterRequest, ITokenResponse, IUserInfoResponse } from './auth.interface';
+import { IApiResponse, IPageResponse } from '../../../types';
+import { IAdminUser, IAdminUserQuery, ILoginRequest, IRegisterRequest, ITokenResponse, IUserInfoResponse } from './auth.interface';
 
 export default {
   login(params: IApiRequestParams<null, null, ILoginRequest>): Promise<IApiResponse<ITokenResponse>> {
@@ -23,6 +23,22 @@ export default {
     return apiService({
       url: '/auth/me',
       method: 'GET',
+    });
+  },
+
+  adminListUsers(params?: IApiRequestParams<null, IAdminUserQuery, null>): Promise<IApiResponse<IPageResponse<IAdminUser>>> {
+    return apiService({
+      url: '/auth/users',
+      method: 'GET',
+      ...params,
+    });
+  },
+
+  adminSetUserStatus(params: IApiRequestParams<{ id: number }, null, { enabled: boolean }>): Promise<IApiResponse<void>> {
+    return apiService({
+      url: '/auth/users/:id/status',
+      method: 'PATCH',
+      ...params,
     });
   },
 };

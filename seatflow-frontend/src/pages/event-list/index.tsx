@@ -1,17 +1,65 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import eventApi from '../../services/apis/event/event.api';
-import { Calendar, MapPin, Ticket, ArrowRight, Sparkles } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import organizerApi from '../../services/apis/organizer/organizer.api';
+import { Ticket, Sparkles } from 'lucide-react';
+import { HotEventsSection } from './components/HotEventsSection';
+import { EventFilterBar, PRICE_RANGE_OPTIONS } from './components/EventFilterBar';
+import { EventCard } from './components/EventCard';
 
 export const EventListPage: React.FC = () => {
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [location, setLocation] = useState('');
+  const [priceRangeKey, setPriceRangeKey] = useState('');
+  const [organizerId, setOrganizerId] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchInput), 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  const priceRange = useMemo(
+    () => PRICE_RANGE_OPTIONS.find((opt) => opt.key === priceRangeKey),
+    [priceRangeKey]
+  );
+
   const { data: events, isLoading, error } = useQuery({
-    queryKey: ['events'],
+    queryKey: ['events', debouncedSearch, location, priceRangeKey, organizerId],
+    queryFn: async () => {
+      const response = await eventApi.getEvents({
+        params: {
+          search: debouncedSearch || undefined,
+          location: location || undefined,
+          minPrice: priceRange?.minPrice,
+          maxPrice: priceRange?.maxPrice,
+          organizerId: organizerId ? Number(organizerId) : undefined,
+        },
+      });
+      return response.data;
+    },
+  });
+
+  const { data: allEvents } = useQuery({
+    queryKey: ['events', 'all-for-filters'],
     queryFn: async () => {
       const response = await eventApi.getEvents();
       return response.data;
     },
   });
+
+  const { data: organizers } = useQuery({
+    queryKey: ['organizers', 'approved'],
+    queryFn: async () => {
+      const response = await organizerApi.list();
+      return response.data;
+    },
+  });
+
+  const locationOptions = useMemo(
+    () => Array.from(new Set((allEvents ?? []).map((e) => e.location))),
+    [allEvents]
+  );
 
   if (isLoading) {
     return (
@@ -45,10 +93,25 @@ export const EventListPage: React.FC = () => {
             Đặt vé sự kiện thả ga, <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">không lo overselling</span>.
           </h1>
           <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
-            SeatFlow kết hợp Redis Distributed Lock (Redisson) và Optimistic Locking DB để bảo vệ trải nghiệm mua vé tức thì của bạn với zero latency.
+            Khám phá hàng loạt sự kiện nổi bật, tìm kiếm và lọc theo địa điểm, mức giá, nhà tổ chức yêu thích của bạn.
           </p>
         </div>
       </div>
+
+      <HotEventsSection />
+
+      <EventFilterBar
+        search={searchInput}
+        onSearchChange={setSearchInput}
+        location={location}
+        onLocationChange={setLocation}
+        locationOptions={locationOptions}
+        priceRangeKey={priceRangeKey}
+        onPriceRangeChange={setPriceRangeKey}
+        organizerId={organizerId}
+        onOrganizerIdChange={setOrganizerId}
+        organizers={organizers ?? []}
+      />
 
       {/* Events Grid */}
       <h2 className="text-xl font-bold text-slate-100 mb-6 flex items-center gap-2">
@@ -56,57 +119,17 @@ export const EventListPage: React.FC = () => {
         <span>Sự kiện đang mở bán ({events?.length || 0})</span>
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {events?.map((event) => (
-          <div
-            key={event.id}
-            className="group glass-card rounded-2xl border border-slate-800 overflow-hidden hover:border-cyan-500/50 transition-all duration-300 flex flex-col justify-between bg-slate-950"
-          >
-            <div>
-              <div className="relative h-48 w-full overflow-hidden">
-                <img
-                  src={event.bannerUrl}
-                  alt={event.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-slate-950/80 backdrop-blur-md border border-slate-700 text-[11px] font-bold text-cyan-400">
-                  {event.availableSeats} ghế trống
-                </div>
-              </div>
-
-              <div className="p-5">
-                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-cyan-400 transition-colors line-clamp-1">
-                  {event.title}
-                </h3>
-                <p className="text-slate-400 text-xs line-clamp-2 mb-4">
-                  {event.description}
-                </p>
-
-                <div className="space-y-2 text-xs text-slate-300">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-                    <span>{new Date(event.eventDate).toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-                    <span className="truncate">{event.location}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-5 pt-0">
-              <Link
-                to={`/events/${event.id}`}
-                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 transition-all"
-              >
-                <span>Chọn Ghế Trực Quan</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </div>
-        ))}
-      </div>
+      {events && events.length === 0 ? (
+        <div className="text-center py-16 text-slate-400 text-sm">
+          Không tìm thấy sự kiện phù hợp với bộ lọc hiện tại.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {events?.map((event) => (
+            <EventCard key={event.id} event={event} />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

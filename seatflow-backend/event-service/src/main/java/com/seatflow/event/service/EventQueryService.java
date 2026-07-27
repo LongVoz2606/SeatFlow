@@ -3,10 +3,14 @@ package com.seatflow.event.service;
 import com.seatflow.common.exception.ResourceNotFoundException;
 import com.seatflow.event.dto.EventDtos;
 import com.seatflow.event.entity.EventEntity;
+import com.seatflow.event.entity.OrganizerEntity;
 import com.seatflow.event.entity.SeatEntity;
 import com.seatflow.event.entity.SeatStatus;
 import com.seatflow.event.repository.EventRepository;
+import com.seatflow.event.repository.OrganizerRepository;
 import com.seatflow.event.repository.SeatRepository;
+import com.seatflow.event.specification.EventSearchCriteria;
+import com.seatflow.event.specification.EventSpecification;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -16,7 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZonedDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -27,31 +33,62 @@ public class EventQueryService {
 
     EventRepository eventRepository;
     SeatRepository seatRepository;
+    OrganizerRepository organizerRepository;
 
     @Transactional(readOnly = true)
-    public List<EventDtos.EventResponse> findAllActiveEvents() {
-        return eventRepository.findByStatusOrderByEventDateAsc("ACTIVE")
-                .stream().map(this::toEventResponse).toList();
+    public List<EventDtos.EventResponse> searchEvents(EventSearchCriteria criteria) {
+        List<EventEntity> events = eventRepository.findAll(EventSpecification.bySearchCriteria(criteria));
+        return toEventResponses(events);
+    }
+
+    @Transactional(readOnly = true)
+    public List<EventDtos.EventResponse> findMyEvents(Long organizerAuthUserId) {
+        OrganizerEntity organizer = organizerRepository.findByAuthUserId(organizerAuthUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bạn chưa đăng ký làm nhà tổ chức."));
+        List<EventEntity> events = eventRepository.findByOrganizerIdOrderByEventDateDesc(organizer.getId());
+        return toEventResponses(events);
+    }
+
+    private List<EventDtos.EventResponse> toEventResponses(List<EventEntity> events) {
+        List<Long> organizerIds = events.stream()
+                .map(EventEntity::getOrganizerId)
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .toList();
+        Map<Long, String> organizerNames = new HashMap<>();
+        if (!organizerIds.isEmpty()) {
+            organizerRepository.findAllById(organizerIds)
+                    .forEach(o -> organizerNames.put(o.getId(), o.getOrganizationName()));
+        }
+        return events.stream().map(e -> toEventResponse(e, organizerNames)).toList();
     }
 
     @Transactional(readOnly = true)
     public Optional<EventDtos.EventDetailResponse> findByIdWithSeatMap(Long eventId) {
         return eventRepository.findById(eventId).map(event -> {
             List<SeatEntity> seats = seatRepository.findByEventIdOrderBySeatRowAscSeatNumberAsc(eventId);
+            String organizerName = event.getOrganizerId() != null
+                    ? organizerRepository.findById(event.getOrganizerId())
+                            .map(OrganizerEntity::getOrganizationName).orElse(null)
+                    : null;
             return new EventDtos.EventDetailResponse(
                     event.getId(), event.getTitle(), event.getDescription(),
                     event.getLocation(), event.getEventDate(), event.getBannerUrl(),
                     event.getTotalSeats(), event.getAvailableSeats(), event.getStatus(),
+                    event.getOrganizerId(), organizerName, event.getIsHot(),
+                    event.getMinPrice(), event.getMaxPrice(),
                     seats.stream().map(this::toSeatResponse).toList()
             );
         });
     }
 
-    public EventDtos.EventResponse toEventResponse(EventEntity e) {
+    public EventDtos.EventResponse toEventResponse(EventEntity e, Map<Long, String> organizerNames) {
         return new EventDtos.EventResponse(
                 e.getId(), e.getTitle(), e.getDescription(), e.getLocation(),
                 e.getEventDate(), e.getBannerUrl(), e.getTotalSeats(),
-                e.getAvailableSeats(), e.getStatus(), e.getCreatedAt()
+                e.getAvailableSeats(), e.getStatus(),
+                e.getOrganizerId(), e.getOrganizerId() != null ? organizerNames.get(e.getOrganizerId()) : null,
+                e.getIsHot(), e.getMinPrice(), e.getMaxPrice(), e.getCreatedAt()
         );
     }
 

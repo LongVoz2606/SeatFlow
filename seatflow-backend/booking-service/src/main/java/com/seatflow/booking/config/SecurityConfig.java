@@ -45,6 +45,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/bookings/admin").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(
                                 "/api/bookings/{bookingCode}", // public: get booking by code
                                 "/v3/api-docs/**",

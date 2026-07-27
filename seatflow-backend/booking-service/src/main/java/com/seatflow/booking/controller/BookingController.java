@@ -67,4 +67,12 @@ public class BookingController {
         }
         return ResponseEntity.ok(ApiResponse.ok(bookingService.findMyBookings(userId)));
     }
+
+    @GetMapping("/admin")
+    @Operation(summary = "[Admin] Danh sách toàn bộ booking + tổng doanh thu")
+    public ResponseEntity<ApiResponse<BookingDtos.AdminBookingListResponse>> getAllForAdmin(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(ApiResponse.ok(bookingService.findAllForAdmin(page, size)));
+    }
 }

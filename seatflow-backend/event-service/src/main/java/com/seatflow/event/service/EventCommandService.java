@@ -1,11 +1,15 @@
 package com.seatflow.event.service;
 
 import com.seatflow.common.exception.ResourceNotFoundException;
+import com.seatflow.common.exception.UnauthorizedException;
 import com.seatflow.event.dto.EventDtos;
 import com.seatflow.event.entity.EventEntity;
+import com.seatflow.event.entity.OrganizerEntity;
+import com.seatflow.event.entity.OrganizerStatus;
 import com.seatflow.event.entity.SeatEntity;
 import com.seatflow.event.entity.SeatStatus;
 import com.seatflow.event.repository.EventRepository;
+import com.seatflow.event.repository.OrganizerRepository;
 import com.seatflow.event.repository.SeatRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +18,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -25,7 +31,75 @@ public class EventCommandService {
 
     EventRepository eventRepository;
     SeatRepository seatRepository;
+    OrganizerRepository organizerRepository;
     EventQueryService eventQueryService;
+
+    /**
+     * Organizer (đã được Admin duyệt) tạo sự kiện mới kèm các khu vực ghế.
+     */
+    @Transactional
+    public Long createEvent(Long authUserId, EventDtos.CreateEventRequest request) {
+        OrganizerEntity organizer = organizerRepository.findByAuthUserId(authUserId)
+                .orElseThrow(() -> new UnauthorizedException("Bạn cần đăng ký làm nhà tổ chức trước khi tạo sự kiện."));
+        if (organizer.getStatus() != OrganizerStatus.APPROVED) {
+            throw new UnauthorizedException("Hồ sơ nhà tổ chức của bạn chưa được Admin duyệt.");
+        }
+
+        List<SeatEntity> seatsToCreate = new ArrayList<>();
+        BigDecimal minPrice = null;
+        BigDecimal maxPrice = null;
+        int totalSeats = 0;
+
+        for (EventDtos.SeatSectionRequest section : request.seatSections()) {
+            for (int i = 1; i <= section.seatCount(); i++) {
+                SeatEntity seat = SeatEntity.builder()
+                        .seatNumber(section.rowLabel() + i)
+                        .seatRow(section.rowLabel())
+                        .seatType(section.seatType())
+                        .price(section.price())
+                        .status(SeatStatus.AVAILABLE)
+                        .version(0L)
+                        .build();
+                seatsToCreate.add(seat);
+            }
+            totalSeats += section.seatCount();
+            minPrice = minPrice == null || section.price().compareTo(minPrice) < 0 ? section.price() : minPrice;
+            maxPrice = maxPrice == null || section.price().compareTo(maxPrice) > 0 ? section.price() : maxPrice;
+        }
+
+        EventEntity event = EventEntity.builder()
+                .title(request.title())
+                .description(request.description())
+                .location(request.location())
+                .eventDate(request.eventDate())
+                .bannerUrl(request.bannerUrl())
+                .totalSeats(totalSeats)
+                .availableSeats(totalSeats)
+                .status("ACTIVE")
+                .organizerId(organizer.getId())
+                .isHot(false)
+                .minPrice(minPrice != null ? minPrice : BigDecimal.ZERO)
+                .maxPrice(maxPrice != null ? maxPrice : BigDecimal.ZERO)
+                .build();
+        EventEntity saved = eventRepository.save(event);
+
+        seatsToCreate.forEach(s -> s.setEventId(saved.getId()));
+        seatRepository.saveAll(seatsToCreate);
+
+        log.info("Organizer {} created event '{}' (id={}) with {} seats", organizer.getId(), saved.getTitle(), saved.getId(), totalSeats);
+        return saved.getId();
+    }
+
+    /**
+     * Admin gắn/gỡ cờ "HOT" cho sự kiện để nổi bật ở trang chủ.
+     */
+    @Transactional
+    public void setHot(Long eventId, boolean hot) {
+        EventEntity event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sự kiện ID: " + eventId));
+        event.setIsHot(hot);
+        eventRepository.save(event);
+    }
 
     /**
      * Internal API: hold seats (called by booking-service via HTTP).

@@ -55,4 +55,18 @@ public class AuthDtos {
             String fullName,
             String role
     ) {}
+
+    public record AdminUserResponse(
+            Long id,
+            String username,
+            String email,
+            String fullName,
+            String role,
+            boolean enabled,
+            java.time.ZonedDateTime createdAt
+    ) {}
+
+    public record UpdateUserStatusRequest(
+            Boolean enabled
+    ) {}
 }

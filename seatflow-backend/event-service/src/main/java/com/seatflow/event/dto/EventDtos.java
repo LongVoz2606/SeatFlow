@@ -16,6 +16,11 @@ public class EventDtos {
             Integer totalSeats,
             Integer availableSeats,
             String status,
+            Long organizerId,
+            String organizerName,
+            Boolean isHot,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
             ZonedDateTime createdAt
     ) {}
 
@@ -39,7 +44,32 @@ public class EventDtos {
             Integer totalSeats,
             Integer availableSeats,
             String status,
+            Long organizerId,
+            String organizerName,
+            Boolean isHot,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
             List<SeatResponse> seats
+    ) {}
+
+    public record SeatSectionRequest(
+            String rowLabel,
+            Integer seatCount,
+            String seatType,
+            BigDecimal price
+    ) {}
+
+    public record CreateEventRequest(
+            String title,
+            String description,
+            String location,
+            ZonedDateTime eventDate,
+            String bannerUrl,
+            List<SeatSectionRequest> seatSections
+    ) {}
+
+    public record SetHotRequest(
+            Boolean isHot
     ) {}
 
     // Internal API DTOs (used by booking-service via Feign)

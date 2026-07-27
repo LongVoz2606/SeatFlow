@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Ticket, ShieldCheck, Zap, LogOut, User } from 'lucide-react';
+import { Ticket, LogOut, User, PlusCircle, ShieldCheck } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [username, setUsername] = useState<string | null>(null);
+  const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
     setUsername(localStorage.getItem('username'));
+    setRole(localStorage.getItem('role'));
   }, [location]);
 
   const handleLogout = () => {
@@ -37,15 +39,24 @@ export const Header: React.FC = () => {
           </div>
         </Link>
 
-        <div className="flex items-center gap-4">
-          <div className="hidden lg:flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full bg-cyan-950/60 text-cyan-300 border border-cyan-500/30">
-            <Zap className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-            <span>Redisson Lock</span>
-          </div>
-          <div className="hidden lg:flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full bg-emerald-950/60 text-emerald-300 border border-emerald-500/30">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Optimistic Locking</span>
-          </div>
+        <div className="flex items-center gap-3">
+          <Link
+            to="/organizers/dashboard"
+            className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-cyan-950/60 text-cyan-300 border border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-950 transition-all"
+          >
+            <PlusCircle className="w-3.5 h-3.5" />
+            <span>Thêm sự kiện</span>
+          </Link>
+
+          {role === 'ADMIN' && (
+            <Link
+              to="/admin"
+              className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 hover:border-emerald-400 hover:bg-emerald-950 transition-all"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Quản trị</span>
+            </Link>
+          )}
 
           {username ? (
             <div className="flex items-center gap-3 border-l border-slate-800 pl-4">

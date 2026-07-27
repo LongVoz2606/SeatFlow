@@ -1,6 +1,6 @@
 import { apiService, IApiRequestParams } from '../index';
 import { IApiResponse, IBooking } from '../../../types';
-import { IHoldSeatsPayload, IConfirmBookingPayload } from './booking.interface';
+import { IHoldSeatsPayload, IConfirmBookingPayload, IAdminBookingQuery, IAdminBookingListResponse } from './booking.interface';
 
 export default {
   holdSeats(params: IApiRequestParams<null, null, IHoldSeatsPayload> & { idempotencyKey?: string }): Promise<IApiResponse<IBooking>> {
@@ -35,6 +35,14 @@ export default {
   getMyBookings(params?: IApiRequestParams<null, null, null>): Promise<IApiResponse<IBooking[]>> {
     return apiService({
       url: '/bookings/my',
+      method: 'GET',
+      ...params,
+    });
+  },
+
+  adminListBookings(params?: IApiRequestParams<null, IAdminBookingQuery, null>): Promise<IApiResponse<IAdminBookingListResponse>> {
+    return apiService({
+      url: '/bookings/admin',
       method: 'GET',
       ...params,
     });

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 
 @Data
@@ -43,6 +44,21 @@ public class EventEntity {
 
     @Column(name = "status", nullable = false, length = 20)
     String status;
+
+    @Column(name = "organizer_id")
+    Long organizerId;
+
+    @Column(name = "is_hot", nullable = false)
+    @Builder.Default
+    Boolean isHot = false;
+
+    @Column(name = "min_price", nullable = false, precision = 12, scale = 2)
+    @Builder.Default
+    BigDecimal minPrice = BigDecimal.ZERO;
+
+    @Column(name = "max_price", nullable = false, precision = 12, scale = 2)
+    @Builder.Default
+    BigDecimal maxPrice = BigDecimal.ZERO;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     ZonedDateTime createdAt;

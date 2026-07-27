@@ -7,15 +7,21 @@ import com.seatflow.auth.repository.AuthUserRepository;
 import com.seatflow.common.exception.BusinessException;
 import com.seatflow.common.exception.ResourceNotFoundException;
 import com.seatflow.common.exception.UnauthorizedException;
+import com.seatflow.common.response.PageResponse;
 import com.seatflow.common.security.JwtTokenProvider;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -88,5 +94,29 @@ public class AuthService {
                 user.getFullName(),
                 user.getRole().name()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<AuthDtos.AdminUserResponse> findAllUsers(String search, int page, int size) {
+        Page<AuthUserEntity> result = StringUtils.hasText(search)
+                ? authUserRepository.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(
+                        search, search, PageRequest.of(page, size))
+                : authUserRepository.findAll(PageRequest.of(page, size));
+
+        List<AuthDtos.AdminUserResponse> content = result.getContent().stream()
+                .map(u -> new AuthDtos.AdminUserResponse(
+                        u.getId(), u.getUsername(), u.getEmail(), u.getFullName(),
+                        u.getRole().name(), u.isEnabled(), u.getCreatedAt()))
+                .toList();
+        return PageResponse.of(content, page, size, result.getTotalElements());
+    }
+
+    @Transactional
+    public void setUserEnabled(Long userId, boolean enabled) {
+        AuthUserEntity user = authUserRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng."));
+        user.setEnabled(enabled);
+        authUserRepository.save(user);
+        log.info("User {} enabled={}", userId, enabled);
     }
 }

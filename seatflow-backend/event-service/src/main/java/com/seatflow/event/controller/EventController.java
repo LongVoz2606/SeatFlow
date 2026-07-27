@@ -5,14 +5,17 @@ import com.seatflow.common.response.ApiResponse;
 import com.seatflow.event.dto.EventDtos;
 import com.seatflow.event.service.EventCommandService;
 import com.seatflow.event.service.EventQueryService;
+import com.seatflow.event.specification.EventSearchCriteria;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -26,9 +29,33 @@ public class EventController {
     EventCommandService eventCommandService;
 
     @GetMapping
-    @Operation(summary = "Lấy danh sách sự kiện đang diễn ra")
-    public ResponseEntity<ApiResponse<List<EventDtos.EventResponse>>> getAllEvents() {
-        return ResponseEntity.ok(ApiResponse.ok(eventQueryService.findAllActiveEvents()));
+    @Operation(summary = "Lấy danh sách sự kiện đang diễn ra (hỗ trợ tìm kiếm & lọc)")
+    public ResponseEntity<ApiResponse<List<EventDtos.EventResponse>>> getAllEvents(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) Boolean hot,
+            @RequestParam(required = false) Long organizerId) {
+        EventSearchCriteria criteria = EventSearchCriteria.builder()
+                .search(search)
+                .location(location)
+                .minPrice(minPrice)
+                .maxPrice(maxPrice)
+                .hot(hot)
+                .organizerId(organizerId)
+                .build();
+        return ResponseEntity.ok(ApiResponse.ok(eventQueryService.searchEvents(criteria)));
+    }
+
+    @GetMapping("/mine")
+    @Operation(summary = "Danh sách sự kiện của nhà tổ chức hiện tại")
+    public ResponseEntity<ApiResponse<List<EventDtos.EventResponse>>> getMyEvents(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return ResponseEntity.status(401).body(ApiResponse.error("UNAUTHORIZED", "Bạn chưa đăng nhập."));
+        }
+        return ResponseEntity.ok(ApiResponse.ok(eventQueryService.findMyEvents(userId)));
     }
 
     @GetMapping("/{id}")
@@ -38,6 +65,28 @@ public class EventController {
         EventDtos.EventDetailResponse detail = eventQueryService.findByIdWithSeatMap(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sự kiện ID: " + id));
         return ResponseEntity.ok(ApiResponse.ok(detail));
+    }
+
+    @PostMapping
+    @Operation(summary = "Nhà tổ chức (đã được duyệt) tạo sự kiện mới")
+    public ResponseEntity<ApiResponse<Long>> createEvent(
+            @RequestBody EventDtos.CreateEventRequest request,
+            HttpServletRequest httpRequest) {
+        Long userId = (Long) httpRequest.getAttribute("userId");
+        if (userId == null) {
+            return ResponseEntity.status(401).body(ApiResponse.error("UNAUTHORIZED", "Bạn chưa đăng nhập."));
+        }
+        Long eventId = eventCommandService.createEvent(userId, request);
+        return ResponseEntity.ok(ApiResponse.ok(eventId, "Tạo sự kiện thành công!"));
+    }
+
+    @PatchMapping("/{id}/hot")
+    @Operation(summary = "[Admin] Gắn/gỡ cờ sự kiện nổi bật (HOT)")
+    public ResponseEntity<ApiResponse<Void>> setHot(
+            @PathVariable Long id,
+            @RequestBody EventDtos.SetHotRequest request) {
+        eventCommandService.setHot(id, Boolean.TRUE.equals(request.isHot()));
+        return ResponseEntity.ok(ApiResponse.ok(null, "Cập nhật thành công."));
     }
 
     // ===== Internal APIs (called by booking-service) =====

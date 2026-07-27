@@ -1,5 +1,6 @@
 export type ESeatStatus = 'AVAILABLE' | 'HELD' | 'BOOKED';
 export type EBookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'EXPIRED';
+export type EOrganizerStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 export interface ISeat {
   id: number;
@@ -23,7 +24,43 @@ export interface IEvent {
   totalSeats: number;
   availableSeats: number;
   status: string;
+  organizerId?: number;
+  organizerName?: string;
+  isHot: boolean;
+  minPrice: number;
+  maxPrice: number;
   seats?: ISeat[];
+}
+
+export interface IOrganizer {
+  id: number;
+  authUserId: number;
+  organizationName: string;
+  description?: string;
+  contactEmail: string;
+  contactPhone?: string;
+  logoUrl?: string;
+  status: EOrganizerStatus;
+  rejectionReason?: string;
+  createdAt: string;
+}
+
+export interface IOrganizerPublic {
+  id: number;
+  organizationName: string;
+  description?: string;
+  logoUrl?: string;
+  contactEmail: string;
+}
+
+export interface IPageResponse<T> {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
 }
 
 export interface IBooking {
