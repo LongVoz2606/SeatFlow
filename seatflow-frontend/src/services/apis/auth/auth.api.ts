@@ -19,6 +19,22 @@ export default {
     });
   },
 
+  loginWithGoogle(params: IApiRequestParams<null, null, { idToken: string }>): Promise<IApiResponse<ITokenResponse>> {
+    return apiService({
+      url: '/auth/oauth/google',
+      method: 'POST',
+      ...params,
+    });
+  },
+
+  loginWithFacebook(params: IApiRequestParams<null, null, { accessToken: string }>): Promise<IApiResponse<ITokenResponse>> {
+    return apiService({
+      url: '/auth/oauth/facebook',
+      method: 'POST',
+      ...params,
+    });
+  },
+
   getMe(): Promise<IApiResponse<IUserInfoResponse>> {
     return apiService({
       url: '/auth/me',

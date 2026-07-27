@@ -39,6 +39,22 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok(response, "Đăng nhập thành công!"));
     }
 
+    @PostMapping("/oauth/google")
+    @Operation(summary = "Đăng nhập bằng Google")
+    public ResponseEntity<ApiResponse<AuthDtos.TokenResponse>> loginWithGoogle(
+            @Valid @RequestBody AuthDtos.GoogleLoginRequest request) {
+        AuthDtos.TokenResponse response = authService.loginWithGoogle(request.idToken());
+        return ResponseEntity.ok(ApiResponse.ok(response, "Đăng nhập bằng Google thành công!"));
+    }
+
+    @PostMapping("/oauth/facebook")
+    @Operation(summary = "Đăng nhập bằng Facebook")
+    public ResponseEntity<ApiResponse<AuthDtos.TokenResponse>> loginWithFacebook(
+            @Valid @RequestBody AuthDtos.FacebookLoginRequest request) {
+        AuthDtos.TokenResponse response = authService.loginWithFacebook(request.accessToken());
+        return ResponseEntity.ok(ApiResponse.ok(response, "Đăng nhập bằng Facebook thành công!"));
+    }
+
     @GetMapping("/me")
     @Operation(summary = "Lấy thông tin người dùng hiện tại")
     public ResponseEntity<ApiResponse<AuthDtos.UserInfoResponse>> getMyInfo(HttpServletRequest request) {

@@ -26,7 +26,7 @@ export const Header: React.FC = () => {
     <header className="sticky top-0 z-50 glass-card border-b border-slate-800 bg-slate-950/80 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 group-hover:scale-105 group-hover:rotate-6 transition-transform duration-300">
             <Ticket className="w-6 h-6 text-slate-950 stroke-[2.5]" />
           </div>
           <div>
@@ -42,7 +42,7 @@ export const Header: React.FC = () => {
         <div className="flex items-center gap-3">
           <Link
             to="/organizers/dashboard"
-            className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-cyan-950/60 text-cyan-300 border border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-950 transition-all"
+            className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-cyan-950/60 text-cyan-300 border border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-950 hover:scale-105 transition-all"
           >
             <PlusCircle className="w-3.5 h-3.5" />
             <span>Thêm sự kiện</span>
@@ -51,7 +51,7 @@ export const Header: React.FC = () => {
           {role === 'ADMIN' && (
             <Link
               to="/admin"
-              className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 hover:border-emerald-400 hover:bg-emerald-950 transition-all"
+              className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 hover:border-emerald-400 hover:bg-emerald-950 hover:scale-105 transition-all"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Quản trị</span>

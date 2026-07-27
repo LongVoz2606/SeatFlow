@@ -20,8 +20,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +38,11 @@ public class AuthService {
 
     @Value("${seatflow.jwt.access-token-expiry-seconds:86400}")
     long accessTokenExpirySeconds;
+
+    @Value("${seatflow.oauth.google.client-id:}")
+    String googleClientId;
+
+    final RestClient restClient = RestClient.create();
 
     @Transactional
     public AuthDtos.TokenResponse register(AuthDtos.RegisterRequest request) {
@@ -119,4 +127,83 @@ public class AuthService {
         authUserRepository.save(user);
         log.info("User {} enabled={}", userId, enabled);
     }
+
+    /**
+     * Verify Google ID token bằng endpoint tokeninfo công khai của Google, không cần client secret.
+     */
+    @Transactional
+    public AuthDtos.TokenResponse loginWithGoogle(String idToken) {
+        GoogleTokenInfo info;
+        try {
+            info = restClient.get()
+                    .uri("https://oauth2.googleapis.com/tokeninfo?id_token={idToken}", idToken)
+                    .retrieve()
+                    .body(GoogleTokenInfo.class);
+        } catch (RestClientException e) {
+            throw new UnauthorizedException("Google ID token không hợp lệ hoặc đã hết hạn.");
+        }
+
+        if (info == null || !StringUtils.hasText(info.email())) {
+            throw new UnauthorizedException("Không lấy được thông tin tài khoản Google.");
+        }
+        if (StringUtils.hasText(googleClientId) && !googleClientId.equals(info.aud())) {
+            throw new UnauthorizedException("Google ID token không thuộc về ứng dụng này.");
+        }
+
+        return loginOrRegisterOAuth(info.email(), info.name());
+    }
+
+    /**
+     * Verify Facebook access token bằng Graph API /me.
+     */
+    @Transactional
+    public AuthDtos.TokenResponse loginWithFacebook(String accessToken) {
+        FacebookProfile profile;
+        try {
+            profile = restClient.get()
+                    .uri("https://graph.facebook.com/me?fields=id,name,email&access_token={accessToken}", accessToken)
+                    .retrieve()
+                    .body(FacebookProfile.class);
+        } catch (RestClientException e) {
+            throw new UnauthorizedException("Facebook access token không hợp lệ hoặc đã hết hạn.");
+        }
+
+        if (profile == null || !StringUtils.hasText(profile.email())) {
+            throw new BusinessException("FACEBOOK_EMAIL_REQUIRED", "Tài khoản Facebook của bạn chưa xác thực email. Vui lòng cấp quyền email để đăng nhập.");
+        }
+
+        return loginOrRegisterOAuth(profile.email(), profile.name());
+    }
+
+    private AuthDtos.TokenResponse loginOrRegisterOAuth(String email, String displayName) {
+        AuthUserEntity user = authUserRepository.findByEmail(email).orElseGet(() -> {
+            String baseUsername = email.substring(0, email.indexOf('@'));
+            String username = baseUsername;
+            while (authUserRepository.existsByUsername(username)) {
+                username = baseUsername + (int) (Math.random() * 9000 + 1000);
+            }
+            AuthUserEntity created = AuthUserEntity.builder()
+                    .username(username)
+                    .email(email)
+                    .passwordHash(passwordEncoder.encode(UUID.randomUUID().toString()))
+                    .fullName(displayName)
+                    .role(AuthRole.USER)
+                    .build();
+            AuthUserEntity saved = authUserRepository.save(created);
+            log.info("New user auto-provisioned via OAuth: {}", saved.getUsername());
+            return saved;
+        });
+
+        if (!user.isEnabled()) {
+            throw new UnauthorizedException("Tài khoản của bạn đã bị vô hiệu hóa.");
+        }
+
+        String token = jwtTokenProvider.generateAccessToken(user.getId(), user.getUsername(), user.getRole().name());
+        log.info("User logged in via OAuth: {}", user.getUsername());
+        return AuthDtos.TokenResponse.of(token, accessTokenExpirySeconds, user.getId(), user.getUsername(), user.getRole().name());
+    }
+
+    private record GoogleTokenInfo(String aud, String email, String name) {}
+
+    private record FacebookProfile(String id, String name, String email) {}
 }

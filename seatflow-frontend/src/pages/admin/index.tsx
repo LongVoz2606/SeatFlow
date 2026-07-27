@@ -18,7 +18,7 @@ export const AdminPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ETab>('organizers');
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-fade-in-up">
       <h1 className="text-2xl font-black text-white mb-6">Trang Quản trị</h1>
 
       <div className="flex flex-wrap gap-2 mb-8 bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800 w-fit">

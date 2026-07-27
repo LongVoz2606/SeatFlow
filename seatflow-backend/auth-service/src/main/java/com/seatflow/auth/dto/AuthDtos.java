@@ -48,6 +48,16 @@ public class AuthDtos {
             String refreshToken
     ) {}
 
+    public record GoogleLoginRequest(
+            @NotBlank(message = "idToken không được để trống")
+            String idToken
+    ) {}
+
+    public record FacebookLoginRequest(
+            @NotBlank(message = "accessToken không được để trống")
+            String accessToken
+    ) {}
+
     public record UserInfoResponse(
             Long id,
             String username,

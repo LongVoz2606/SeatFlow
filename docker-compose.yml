@@ -83,6 +83,7 @@ services:
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
       JWT_SECRET: seatflow-super-secret-key-for-jwt-signing-must-be-at-least-256-bits
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -181,6 +182,9 @@ services:
     build:
       context: ./seatflow-frontend
       dockerfile: Dockerfile
+      args:
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
+        VITE_FACEBOOK_APP_ID: ${VITE_FACEBOOK_APP_ID:-}
     container_name: seatflow-frontend
     ports:
       - "3000:80"

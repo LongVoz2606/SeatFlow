@@ -12,7 +12,7 @@ const formatPrice = (value: number) =>
 
 export const EventCard: React.FC<IEventCardProps> = ({ event }) => {
   return (
-    <div className="group glass-card rounded-2xl border border-slate-800 overflow-hidden hover:border-cyan-500/50 transition-all duration-300 flex flex-col justify-between bg-slate-950 flex-shrink-0">
+    <div className="group glass-card rounded-2xl border border-slate-800 overflow-hidden hover:border-cyan-500/50 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10 transition-all duration-300 flex flex-col justify-between bg-slate-950 flex-shrink-0">
       <div>
         <div className="relative h-48 w-full overflow-hidden">
           <img

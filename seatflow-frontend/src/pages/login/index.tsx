@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authApi from '../../services/apis/auth/auth.api';
+import { ITokenResponse } from '../../services/apis/auth/auth.interface';
+import { IApiResponse } from '../../types';
+import { SocialLoginButtons } from '../../components/SocialLoginButtons';
 import {
   Mail, Lock, User as UserIcon, LogIn, UserPlus, AlertCircle, CheckCircle,
   Ticket, Zap, ShieldCheck, TrendingUp, Sparkles,
@@ -23,6 +26,19 @@ export const LoginPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const applyLoginResponse = (response: IApiResponse<ITokenResponse>) => {
+    if (response.success && response.data) {
+      const { accessToken, username: userUsername, userId, role } = response.data;
+      localStorage.setItem('token', accessToken);
+      localStorage.setItem('username', userUsername);
+      localStorage.setItem('userId', String(userId));
+      localStorage.setItem('role', role);
+      navigate('/');
+    } else {
+      setError(response.message || 'Đăng nhập không thành công.');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -37,17 +53,7 @@ export const LoginPage: React.FC = () => {
             password: password,
           },
         });
-
-        if (response.success && response.data) {
-          const { accessToken, username: userUsername, userId, role } = response.data;
-          localStorage.setItem('token', accessToken);
-          localStorage.setItem('username', userUsername);
-          localStorage.setItem('userId', String(userId));
-          localStorage.setItem('role', role);
-          navigate('/');
-        } else {
-          setError(response.message || 'Đăng nhập không thành công.');
-        }
+        applyLoginResponse(response);
       } else {
         const response = await authApi.register({
           body: {
@@ -123,7 +129,7 @@ export const LoginPage: React.FC = () => {
 
       {/* Right: form */}
       <div className="flex items-center justify-center px-4 py-12 bg-slate-950">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-md animate-fade-in-up">
           <div className="glass-card border border-slate-800 rounded-3xl p-8 shadow-2xl relative overflow-hidden bg-slate-950">
             <div className="absolute -top-12 -right-12 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none" />
             <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
@@ -263,6 +269,11 @@ export const LoginPage: React.FC = () => {
                 )}
               </button>
             </form>
+
+            <SocialLoginButtons
+              onSuccess={applyLoginResponse}
+              onError={(message) => setError(message)}
+            />
           </div>
         </div>
       </div>

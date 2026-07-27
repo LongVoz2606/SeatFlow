@@ -63,9 +63,19 @@ export const EventListPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
-        <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-slate-400 font-medium text-sm">Đang tải danh sách sự kiện...</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border border-slate-800 overflow-hidden bg-slate-950">
+              <div className="h-48 w-full animate-shimmer" />
+              <div className="p-5 space-y-3">
+                <div className="h-4 w-3/4 rounded animate-shimmer" />
+                <div className="h-3 w-full rounded animate-shimmer" />
+                <div className="h-3 w-2/3 rounded animate-shimmer" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -82,7 +92,7 @@ export const EventListPage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Hero Banner */}
-      <div className="relative mb-12 p-8 sm:p-12 rounded-3xl glass-card border border-slate-800 overflow-hidden bg-slate-950">
+      <div className="relative mb-12 p-8 sm:p-12 rounded-3xl glass-card border border-slate-800 overflow-hidden bg-slate-950 animate-fade-in-up">
         <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl -z-10 pointer-events-none" />
         <div className="max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/30 text-cyan-300 text-xs font-semibold mb-4">
@@ -125,8 +135,10 @@ export const EventListPage: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events?.map((event) => (
-            <EventCard key={event.id} event={event} />
+          {events?.map((event, index) => (
+            <div key={event.id} className="animate-fade-in-up" style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}>
+              <EventCard event={event} />
+            </div>
           ))}
         </div>
       )}

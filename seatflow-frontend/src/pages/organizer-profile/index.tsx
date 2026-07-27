@@ -44,7 +44,7 @@ export const OrganizerProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-fade-in-up">
       <div className="glass-card border border-slate-800 rounded-3xl p-8 mb-10 bg-slate-950 flex items-center gap-6">
         <div className="w-20 h-20 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
           {organizer.logoUrl ? (
