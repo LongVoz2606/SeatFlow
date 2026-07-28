@@ -83,4 +83,54 @@ public class AuthController {
         authService.setUserEnabled(id, Boolean.TRUE.equals(request.enabled()));
         return ResponseEntity.ok(ApiResponse.ok(null, "Cập nhật trạng thái tài khoản thành công."));
     }
+
+    @PostMapping("/forgot-password/request-otp")
+    @Operation(summary = "Quên mật khẩu - gửi mã OTP qua Email hoặc SMS")
+    public ResponseEntity<ApiResponse<AuthDtos.OtpSentResponse>> forgotPasswordRequestOtp(
+            @Valid @RequestBody AuthDtos.ForgotPasswordOtpRequest request) {
+        String masked = authService.forgotPasswordRequestOtp(request.usernameOrEmail(), request.channel());
+        return ResponseEntity.ok(ApiResponse.ok(new AuthDtos.OtpSentResponse(masked), "Đã gửi mã OTP."));
+    }
+
+    @PostMapping("/forgot-password/verify-otp")
+    @Operation(summary = "Quên mật khẩu - xác thực mã OTP, nhận resetToken")
+    public ResponseEntity<ApiResponse<AuthDtos.ResetTokenResponse>> forgotPasswordVerifyOtp(
+            @Valid @RequestBody AuthDtos.ForgotPasswordVerifyRequest request) {
+        String resetToken = authService.forgotPasswordVerifyOtp(request.usernameOrEmail(), request.otp());
+        return ResponseEntity.ok(ApiResponse.ok(new AuthDtos.ResetTokenResponse(resetToken), "Xác thực OTP thành công."));
+    }
+
+    @PostMapping("/forgot-password/reset-password")
+    @Operation(summary = "Quên mật khẩu - đặt lại mật khẩu mới bằng resetToken")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
+            @Valid @RequestBody AuthDtos.ResetPasswordRequest request) {
+        authService.resetPassword(request.resetToken(), request.newPassword());
+        return ResponseEntity.ok(ApiResponse.ok(null, "Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại."));
+    }
+
+    @PostMapping("/change-password/request-otp")
+    @Operation(summary = "Đổi mật khẩu - xác thực mật khẩu cũ và gửi mã OTP qua Email")
+    public ResponseEntity<ApiResponse<AuthDtos.OtpSentResponse>> changePasswordRequestOtp(
+            HttpServletRequest httpRequest,
+            @Valid @RequestBody AuthDtos.ChangePasswordOtpRequest request) {
+        Long userId = (Long) httpRequest.getAttribute("userId");
+        if (userId == null) {
+            return ResponseEntity.status(401).body(ApiResponse.error("UNAUTHORIZED", "Bạn chưa đăng nhập."));
+        }
+        String masked = authService.changePasswordRequestOtp(userId, request.oldPassword(), request.newPassword());
+        return ResponseEntity.ok(ApiResponse.ok(new AuthDtos.OtpSentResponse(masked), "Đã gửi mã OTP xác nhận đến email của bạn."));
+    }
+
+    @PostMapping("/change-password/verify-otp")
+    @Operation(summary = "Đổi mật khẩu - xác thực OTP và cập nhật mật khẩu mới")
+    public ResponseEntity<ApiResponse<Void>> changePasswordVerifyOtp(
+            HttpServletRequest httpRequest,
+            @Valid @RequestBody AuthDtos.ChangePasswordVerifyRequest request) {
+        Long userId = (Long) httpRequest.getAttribute("userId");
+        if (userId == null) {
+            return ResponseEntity.status(401).body(ApiResponse.error("UNAUTHORIZED", "Bạn chưa đăng nhập."));
+        }
+        authService.changePasswordVerifyOtp(userId, request.otp());
+        return ResponseEntity.ok(ApiResponse.ok(null, "Đổi mật khẩu thành công."));
+    }
 }

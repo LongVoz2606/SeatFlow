@@ -4,9 +4,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import userApi from '../../services/apis/user/user.api';
 import bookingApi from '../../services/apis/booking/booking.api';
 import eventApi from '../../services/apis/event/event.api';
+import authApi from '../../services/apis/auth/auth.api';
 import CountdownTimer from '../../components/CountdownTimer';
-import { 
-  User, Ticket, History, ShoppingCart, LogOut, Save, ShieldAlert, CheckCircle, ExternalLink, Calendar, Wallet 
+import { OtpModal } from '../../components/OtpModal';
+import {
+  User, Ticket, History, ShoppingCart, LogOut, Save, ShieldAlert, CheckCircle, ExternalLink, Calendar, Wallet, KeyRound
 } from 'lucide-react';
 
 export const ProfilePage: React.FC = () => {
@@ -91,6 +93,69 @@ export const ProfilePage: React.FC = () => {
   const handleUpdateProfile = (e: React.FormEvent) => {
     e.preventDefault();
     updateProfileMutation.mutate({ fullName, phone, avatarUrl });
+  };
+
+  // Change password states
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [changePwError, setChangePwError] = useState<string | null>(null);
+  const [changePwMasked, setChangePwMasked] = useState('');
+  const [otpModalOpen, setOtpModalOpen] = useState(false);
+
+  const requestChangePasswordOtpMutation = useMutation({
+    mutationFn: async () => authApi.changePasswordRequestOtp({ body: { oldPassword, newPassword } }),
+    onSuccess: (res) => {
+      if (res.success && res.data) {
+        setChangePwMasked(res.data.maskedDestination);
+        setOtpModalOpen(true);
+        setChangePwError(null);
+      } else {
+        setChangePwError(res.message || 'Không thể gửi mã OTP.');
+      }
+    },
+    onError: (err: any) => {
+      setChangePwError(err?.response?.data?.message || 'Không thể gửi mã OTP.');
+    },
+  });
+
+  const handleRequestChangePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    setChangePwError(null);
+    setErrorMsg(null);
+    setSuccessMsg(null);
+    if (newPassword.length < 6) {
+      setChangePwError('Mật khẩu mới tối thiểu 6 ký tự.');
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      setChangePwError('Xác nhận mật khẩu mới không khớp.');
+      return;
+    }
+    requestChangePasswordOtpMutation.mutate();
+  };
+
+  const handleVerifyChangePasswordOtp = async (otp: string) => {
+    const response = await authApi.changePasswordVerifyOtp({ body: { otp } });
+    if (response.success) {
+      setOtpModalOpen(false);
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmNewPassword('');
+      setSuccessMsg('Đổi mật khẩu thành công!');
+      setErrorMsg(null);
+    } else {
+      throw new Error(response.message || 'Xác thực OTP thất bại.');
+    }
+  };
+
+  const handleResendChangePasswordOtp = async () => {
+    const response = await authApi.changePasswordRequestOtp({ body: { oldPassword, newPassword } });
+    if (response.success && response.data) {
+      setChangePwMasked(response.data.maskedDestination);
+    } else {
+      throw new Error(response.message || 'Không thể gửi lại mã OTP.');
+    }
   };
 
   const handleLogout = () => {
@@ -300,6 +365,69 @@ export const ProfilePage: React.FC = () => {
                   <span>Lưu cập nhật</span>
                 </button>
               </form>
+
+              <div className="pt-6 border-t border-slate-800 max-w-xl">
+                <h3 className="text-base font-bold text-white flex items-center gap-2 mb-4">
+                  <KeyRound className="w-4 h-4 text-cyan-400" />
+                  <span>Đổi mật khẩu</span>
+                </h3>
+
+                {changePwError && (
+                  <div className="mb-4 p-3 bg-rose-950/40 border border-rose-500/30 rounded-xl flex gap-3 items-start text-xs text-rose-300">
+                    <ShieldAlert className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <span>{changePwError}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleRequestChangePassword} className="space-y-4">
+                  <div>
+                    <label className="block text-slate-400 text-[10px] font-bold mb-1.5 uppercase tracking-wider">Mật khẩu hiện tại</label>
+                    <input
+                      type="password"
+                      required
+                      value={oldPassword}
+                      onChange={(e) => setOldPassword(e.target.value)}
+                      placeholder="Nhập mật khẩu hiện tại"
+                      className="w-full bg-slate-900 border border-slate-800 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 rounded-xl py-2.5 px-4 text-sm text-slate-100 placeholder-slate-600 outline-none transition-all"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-slate-400 text-[10px] font-bold mb-1.5 uppercase tracking-wider">Mật khẩu mới</label>
+                      <input
+                        type="password"
+                        required
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Tối thiểu 6 ký tự"
+                        className="w-full bg-slate-900 border border-slate-800 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 rounded-xl py-2.5 px-4 text-sm text-slate-100 placeholder-slate-600 outline-none transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 text-[10px] font-bold mb-1.5 uppercase tracking-wider">Xác nhận mật khẩu mới</label>
+                      <input
+                        type="password"
+                        required
+                        value={confirmNewPassword}
+                        onChange={(e) => setConfirmNewPassword(e.target.value)}
+                        placeholder="Nhập lại mật khẩu mới"
+                        className="w-full bg-slate-900 border border-slate-800 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 rounded-xl py-2.5 px-4 text-sm text-slate-100 placeholder-slate-600 outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Sau khi xác nhận, mã OTP sẽ được gửi đến email của bạn để hoàn tất đổi mật khẩu.
+                  </p>
+                  <button
+                    type="submit"
+                    disabled={requestChangePasswordOtpMutation.isPending}
+                    className="py-3 px-6 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-cyan-500/20 disabled:opacity-50 transition-all"
+                  >
+                    <KeyRound className="w-4 h-4" />
+                    <span>{requestChangePasswordOtpMutation.isPending ? 'Đang gửi mã OTP...' : 'Đổi mật khẩu'}</span>
+                  </button>
+                </form>
+              </div>
             </div>
           )}
 
@@ -457,6 +585,15 @@ export const ProfilePage: React.FC = () => {
 
         </div>
       </div>
+
+      <OtpModal
+        isOpen={otpModalOpen}
+        title="Xác thực đổi mật khẩu"
+        description={`Mã OTP đã được gửi đến email ${changePwMasked}.`}
+        onSubmit={handleVerifyChangePasswordOtp}
+        onResend={handleResendChangePasswordOtp}
+        onClose={() => setOtpModalOpen(false)}
+      />
     </div>
   );
 };

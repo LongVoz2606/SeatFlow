@@ -1,6 +1,10 @@
 import { apiService, IApiRequestParams } from '../index';
 import { IApiResponse, IPageResponse } from '../../../types';
-import { IAdminUser, IAdminUserQuery, ILoginRequest, IRegisterRequest, ITokenResponse, IUserInfoResponse } from './auth.interface';
+import {
+  IAdminUser, IAdminUserQuery, IChangePasswordOtpRequest, IChangePasswordVerifyRequest,
+  IForgotPasswordOtpRequest, IForgotPasswordVerifyRequest, ILoginRequest, IOtpSentResponse,
+  IRegisterRequest, IResetPasswordRequest, IResetTokenResponse, ITokenResponse, IUserInfoResponse,
+} from './auth.interface';
 
 export default {
   login(params: IApiRequestParams<null, null, ILoginRequest>): Promise<IApiResponse<ITokenResponse>> {
@@ -54,6 +58,46 @@ export default {
     return apiService({
       url: '/auth/users/:id/status',
       method: 'PATCH',
+      ...params,
+    });
+  },
+
+  forgotPasswordRequestOtp(params: IApiRequestParams<null, null, IForgotPasswordOtpRequest>): Promise<IApiResponse<IOtpSentResponse>> {
+    return apiService({
+      url: '/auth/forgot-password/request-otp',
+      method: 'POST',
+      ...params,
+    });
+  },
+
+  forgotPasswordVerifyOtp(params: IApiRequestParams<null, null, IForgotPasswordVerifyRequest>): Promise<IApiResponse<IResetTokenResponse>> {
+    return apiService({
+      url: '/auth/forgot-password/verify-otp',
+      method: 'POST',
+      ...params,
+    });
+  },
+
+  resetPassword(params: IApiRequestParams<null, null, IResetPasswordRequest>): Promise<IApiResponse<void>> {
+    return apiService({
+      url: '/auth/forgot-password/reset-password',
+      method: 'POST',
+      ...params,
+    });
+  },
+
+  changePasswordRequestOtp(params: IApiRequestParams<null, null, IChangePasswordOtpRequest>): Promise<IApiResponse<IOtpSentResponse>> {
+    return apiService({
+      url: '/auth/change-password/request-otp',
+      method: 'POST',
+      ...params,
+    });
+  },
+
+  changePasswordVerifyOtp(params: IApiRequestParams<null, null, IChangePasswordVerifyRequest>): Promise<IApiResponse<void>> {
+    return apiService({
+      url: '/auth/change-password/verify-otp',
+      method: 'POST',
       ...params,
     });
   },

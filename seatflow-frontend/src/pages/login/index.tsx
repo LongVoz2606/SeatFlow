@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authApi from '../../services/apis/auth/auth.api';
-import { ITokenResponse } from '../../services/apis/auth/auth.interface';
+import { IOtpChannel, ITokenResponse } from '../../services/apis/auth/auth.interface';
 import { IApiResponse } from '../../types';
 import { SocialLoginButtons } from '../../components/SocialLoginButtons';
+import { OtpModal } from '../../components/OtpModal';
 import {
   Mail, Lock, User as UserIcon, LogIn, UserPlus, AlertCircle, CheckCircle,
-  Ticket, Zap, ShieldCheck, TrendingUp, Sparkles,
+  Ticket, Zap, ShieldCheck, TrendingUp, Sparkles, ArrowLeft, Smartphone, KeyRound,
 } from 'lucide-react';
 
 const FEATURES = [
@@ -25,6 +26,103 @@ export const LoginPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Forgot password flow
+  const [view, setView] = useState<'auth' | 'forgot'>('auth');
+  const [forgotIdentifier, setForgotIdentifier] = useState('');
+  const [forgotChannel, setForgotChannel] = useState<IOtpChannel>('EMAIL');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState<string | null>(null);
+  const [forgotMasked, setForgotMasked] = useState('');
+  const [otpModalOpen, setOtpModalOpen] = useState(false);
+  const [resetToken, setResetToken] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+
+  const resetForgotState = () => {
+    setView('auth');
+    setForgotIdentifier('');
+    setForgotChannel('EMAIL');
+    setForgotError(null);
+    setForgotMasked('');
+    setOtpModalOpen(false);
+    setResetToken(null);
+    setNewPassword('');
+    setConfirmNewPassword('');
+  };
+
+  const handleForgotRequestOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError(null);
+    setForgotLoading(true);
+    try {
+      const response = await authApi.forgotPasswordRequestOtp({
+        body: { usernameOrEmail: forgotIdentifier, channel: forgotChannel },
+      });
+      if (response.success && response.data) {
+        setForgotMasked(response.data.maskedDestination);
+        setOtpModalOpen(true);
+      } else {
+        setForgotError(response.message || 'Không thể gửi mã OTP.');
+      }
+    } catch (err: any) {
+      setForgotError(err?.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại sau.');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const handleForgotVerifyOtp = async (otp: string) => {
+    const response = await authApi.forgotPasswordVerifyOtp({
+      body: { usernameOrEmail: forgotIdentifier, otp },
+    });
+    if (response.success && response.data) {
+      setResetToken(response.data.resetToken);
+      setOtpModalOpen(false);
+    } else {
+      throw new Error(response.message || 'Xác thực OTP thất bại.');
+    }
+  };
+
+  const handleForgotResendOtp = async () => {
+    const response = await authApi.forgotPasswordRequestOtp({
+      body: { usernameOrEmail: forgotIdentifier, channel: forgotChannel },
+    });
+    if (response.success && response.data) {
+      setForgotMasked(response.data.maskedDestination);
+    } else {
+      throw new Error(response.message || 'Không thể gửi lại mã OTP.');
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError(null);
+    if (newPassword.length < 6) {
+      setForgotError('Mật khẩu mới tối thiểu 6 ký tự.');
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      setForgotError('Xác nhận mật khẩu không khớp.');
+      return;
+    }
+    setResetLoading(true);
+    try {
+      const response = await authApi.resetPassword({ body: { resetToken: resetToken!, newPassword } });
+      if (response.success) {
+        resetForgotState();
+        setIsLogin(true);
+        setSuccessMessage('Đặt lại mật khẩu thành công! Vui lòng đăng nhập bằng mật khẩu mới.');
+      } else {
+        setForgotError(response.message || 'Không thể đặt lại mật khẩu.');
+      }
+    } catch (err: any) {
+      setForgotError(err?.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại sau.');
+    } finally {
+      setResetLoading(false);
+    }
+  };
 
   const applyLoginResponse = (response: IApiResponse<ITokenResponse>) => {
     if (response.success && response.data) {
@@ -141,6 +239,7 @@ export const LoginPage: React.FC = () => {
             </div>
 
             <div className="flex-1 flex flex-col justify-between z-10 relative">
+              {view === 'auth' ? (
               <div>
                 <div className="text-center mb-6">
                   <h2 className="text-2xl font-black text-white tracking-tight mb-2">
@@ -249,6 +348,17 @@ export const LoginPage: React.FC = () => {
                         className="w-full bg-slate-900 border border-slate-800 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 rounded-xl py-2 pl-9 pr-3 text-xs text-slate-100 placeholder-slate-600 outline-none transition-all"
                       />
                     </div>
+                    {isLogin && (
+                      <div className="flex justify-end mt-1.5">
+                        <button
+                          type="button"
+                          onClick={() => { setView('forgot'); setForgotError(null); setError(null); setSuccessMessage(null); }}
+                          className="text-[11px] text-cyan-400 hover:text-cyan-300 font-semibold hover:underline"
+                        >
+                          Quên mật khẩu?
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <button
@@ -272,15 +382,163 @@ export const LoginPage: React.FC = () => {
                   </button>
                 </form>
               </div>
+              ) : (
+              <div>
+                <button
+                  onClick={resetForgotState}
+                  className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-cyan-400 font-semibold mb-5 transition-colors"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Quay lại đăng nhập</span>
+                </button>
 
-              <SocialLoginButtons
-                onSuccess={applyLoginResponse}
-                onError={(message) => setError(message)}
-              />
+                <div className="text-center mb-6">
+                  <div className="w-12 h-12 rounded-2xl bg-cyan-950/60 border border-cyan-500/30 flex items-center justify-center mx-auto mb-3">
+                    <KeyRound className="w-6 h-6 text-cyan-400" />
+                  </div>
+                  <h2 className="text-xl font-black text-white tracking-tight mb-1.5">
+                    {resetToken ? 'Đặt mật khẩu mới' : 'Quên mật khẩu'}
+                  </h2>
+                  <p className="text-slate-400 text-xs">
+                    {resetToken
+                      ? 'Nhập mật khẩu mới cho tài khoản của bạn.'
+                      : 'Chọn phương thức nhận mã OTP để xác thực tài khoản.'}
+                  </p>
+                </div>
+
+                {forgotError && (
+                  <div className="mb-4 p-3 bg-rose-950/40 border border-rose-500/30 rounded-xl flex gap-3 items-start text-xs text-rose-300">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <span>{forgotError}</span>
+                  </div>
+                )}
+
+                {!resetToken ? (
+                  <form onSubmit={handleForgotRequestOtp} className="space-y-3.5">
+                    <div>
+                      <label className="block text-slate-400 text-[10px] font-bold mb-1 uppercase tracking-wider">USERNAME HOẶC EMAIL</label>
+                      <div className="relative">
+                        <UserIcon className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+                        <input
+                          type="text"
+                          required
+                          value={forgotIdentifier}
+                          onChange={(e) => setForgotIdentifier(e.target.value)}
+                          placeholder="Nhập username hoặc email"
+                          className="w-full bg-slate-900 border border-slate-800 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 rounded-xl py-2 pl-9 pr-3 text-xs text-slate-100 placeholder-slate-600 outline-none transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-400 text-[10px] font-bold mb-2 uppercase tracking-wider">Xác thực qua</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setForgotChannel('EMAIL')}
+                          className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border text-xs font-bold transition-all ${
+                            forgotChannel === 'EMAIL'
+                              ? 'bg-cyan-500 border-cyan-500 text-slate-950'
+                              : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-cyan-500/40'
+                          }`}
+                        >
+                          <Mail className="w-3.5 h-3.5" />
+                          <span>Email</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setForgotChannel('SMS')}
+                          className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border text-xs font-bold transition-all ${
+                            forgotChannel === 'SMS'
+                              ? 'bg-cyan-500 border-cyan-500 text-slate-950'
+                              : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-cyan-500/40'
+                          }`}
+                        >
+                          <Smartphone className="w-3.5 h-3.5" />
+                          <span>SMS</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={forgotLoading}
+                      className="w-full mt-2 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 disabled:opacity-50 transition-all"
+                    >
+                      {forgotLoading ? (
+                        <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <span>Gửi mã OTP</span>
+                      )}
+                    </button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleResetPassword} className="space-y-3.5">
+                    <div>
+                      <label className="block text-slate-400 text-[10px] font-bold mb-1 uppercase tracking-wider">MẬT KHẨU MỚI</label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+                        <input
+                          type="password"
+                          required
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="Tối thiểu 6 ký tự"
+                          className="w-full bg-slate-900 border border-slate-800 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 rounded-xl py-2 pl-9 pr-3 text-xs text-slate-100 placeholder-slate-600 outline-none transition-all"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 text-[10px] font-bold mb-1 uppercase tracking-wider">XÁC NHẬN MẬT KHẨU MỚI</label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+                        <input
+                          type="password"
+                          required
+                          value={confirmNewPassword}
+                          onChange={(e) => setConfirmNewPassword(e.target.value)}
+                          placeholder="Nhập lại mật khẩu mới"
+                          className="w-full bg-slate-900 border border-slate-800 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 rounded-xl py-2 pl-9 pr-3 text-xs text-slate-100 placeholder-slate-600 outline-none transition-all"
+                        />
+                      </div>
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={resetLoading}
+                      className="w-full mt-2 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 disabled:opacity-50 transition-all"
+                    >
+                      {resetLoading ? (
+                        <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <span>Đặt lại mật khẩu</span>
+                      )}
+                    </button>
+                  </form>
+                )}
+              </div>
+              )}
+
+              {view === 'auth' && (
+                <SocialLoginButtons
+                  onSuccess={applyLoginResponse}
+                  onError={(message) => setError(message)}
+                />
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      <OtpModal
+        isOpen={otpModalOpen}
+        title="Xác thực OTP"
+        description={forgotChannel === 'SMS'
+          ? `Mã OTP đã được gửi đến số điện thoại ${forgotMasked}.`
+          : `Mã OTP đã được gửi đến email ${forgotMasked}.`}
+        onSubmit={handleForgotVerifyOtp}
+        onResend={handleForgotResendOtp}
+        onClose={() => setOtpModalOpen(false)}
+      />
     </div>
   );
 };

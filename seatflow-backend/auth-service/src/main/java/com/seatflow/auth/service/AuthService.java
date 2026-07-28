@@ -1,8 +1,12 @@
 package com.seatflow.auth.service;
 
+import com.seatflow.auth.client.UserServiceClient;
 import com.seatflow.auth.dto.AuthDtos;
 import com.seatflow.auth.entity.AuthRole;
 import com.seatflow.auth.entity.AuthUserEntity;
+import com.seatflow.auth.notification.EmailSender;
+import com.seatflow.auth.notification.SmsSender;
+import com.seatflow.auth.otp.OtpService;
 import com.seatflow.auth.repository.AuthUserRepository;
 import com.seatflow.common.exception.BusinessException;
 import com.seatflow.common.exception.ResourceNotFoundException;
@@ -23,6 +27,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,6 +40,10 @@ public class AuthService {
     final AuthUserRepository authUserRepository;
     final PasswordEncoder passwordEncoder;
     final JwtTokenProvider jwtTokenProvider;
+    final OtpService otpService;
+    final EmailSender emailSender;
+    final SmsSender smsSender;
+    final UserServiceClient userServiceClient;
 
     @Value("${seatflow.jwt.access-token-expiry-seconds:86400}")
     long accessTokenExpirySeconds;
@@ -201,6 +210,117 @@ public class AuthService {
         String token = jwtTokenProvider.generateAccessToken(user.getId(), user.getUsername(), user.getRole().name());
         log.info("User logged in via OAuth: {}", user.getUsername());
         return AuthDtos.TokenResponse.of(token, accessTokenExpirySeconds, user.getId(), user.getUsername(), user.getRole().name());
+    }
+
+    // ─── Quên mật khẩu (chưa đăng nhập) ────────────────────────────────────
+
+    @Transactional(readOnly = true)
+    public String forgotPasswordRequestOtp(String usernameOrEmail, String channel) {
+        AuthUserEntity user = findByUsernameOrEmail(usernameOrEmail);
+        String otpKey = "reset:" + user.getId();
+        String code = otpService.generateAndStore(otpKey);
+
+        if ("SMS".equalsIgnoreCase(channel)) {
+            String phone = userServiceClient.getPhone(user.getId())
+                    .filter(StringUtils::hasText)
+                    .orElseThrow(() -> new BusinessException("PHONE_NOT_SET",
+                            "Bạn chưa cập nhật số điện thoại trong hồ sơ. Vui lòng chọn xác thực qua Email hoặc cập nhật SĐT trước."));
+            smsSender.send(normalizePhone(phone),
+                    "SeatFlow: Ma OTP dat lai mat khau cua ban la " + code + ". Ma co hieu luc trong 5 phut. Khong chia se ma nay cho bat ky ai.");
+            log.info("Forgot-password OTP sent via SMS for user {}", user.getUsername());
+            return maskPhone(phone);
+        }
+
+        emailSender.send(user.getEmail(), "SeatFlow - Mã OTP đặt lại mật khẩu",
+                "Mã OTP đặt lại mật khẩu của bạn là: " + code + "\nMã có hiệu lực trong 5 phút. Nếu bạn không yêu cầu, hãy bỏ qua email này.");
+        log.info("Forgot-password OTP sent via Email for user {}", user.getUsername());
+        return maskEmail(user.getEmail());
+    }
+
+    @Transactional(readOnly = true)
+    public String forgotPasswordVerifyOtp(String usernameOrEmail, String otp) {
+        AuthUserEntity user = findByUsernameOrEmail(usernameOrEmail);
+        otpService.verify("reset:" + user.getId(), otp);
+        return otpService.issueTicket(user.getId());
+    }
+
+    @Transactional
+    public void resetPassword(String resetToken, String newPassword) {
+        Long userId = otpService.consumeTicket(resetToken);
+        AuthUserEntity user = authUserRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng."));
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        authUserRepository.save(user);
+        log.info("Password reset via OTP for user {}", user.getUsername());
+    }
+
+    // ─── Đổi mật khẩu (đã đăng nhập) ───────────────────────────────────────
+
+    @Transactional(readOnly = true)
+    public String changePasswordRequestOtp(Long userId, String oldPassword, String newPassword) {
+        AuthUserEntity user = authUserRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng."));
+
+        if (!passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
+            throw new BusinessException("OLD_PASSWORD_INCORRECT", "Mật khẩu hiện tại không đúng.");
+        }
+        if (passwordEncoder.matches(newPassword, user.getPasswordHash())) {
+            throw new BusinessException("SAME_PASSWORD", "Mật khẩu mới phải khác mật khẩu hiện tại.");
+        }
+
+        String key = "change:" + userId;
+        String code = otpService.generateAndStore(key);
+        otpService.storePending(key, passwordEncoder.encode(newPassword), Duration.ofMinutes(5));
+
+        emailSender.send(user.getEmail(), "SeatFlow - Mã OTP đổi mật khẩu",
+                "Mã OTP xác nhận đổi mật khẩu của bạn là: " + code + "\nMã có hiệu lực trong 5 phút. Nếu bạn không yêu cầu, hãy bỏ qua email này.");
+        log.info("Change-password OTP sent for user {}", user.getUsername());
+        return maskEmail(user.getEmail());
+    }
+
+    @Transactional
+    public void changePasswordVerifyOtp(Long userId, String otp) {
+        String key = "change:" + userId;
+        otpService.verify(key, otp);
+
+        String pendingHash = otpService.getPending(key);
+        if (pendingHash == null) {
+            throw new BusinessException("OTP_EXPIRED", "Phiên đổi mật khẩu đã hết hạn. Vui lòng thực hiện lại từ đầu.");
+        }
+        otpService.clearPending(key);
+
+        AuthUserEntity user = authUserRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng."));
+        user.setPasswordHash(pendingHash);
+        authUserRepository.save(user);
+        log.info("Password changed via OTP for user {}", user.getUsername());
+    }
+
+    // ─── Helpers ────────────────────────────────────────────────────────────
+
+    private AuthUserEntity findByUsernameOrEmail(String usernameOrEmail) {
+        return authUserRepository.findByUsername(usernameOrEmail)
+                .or(() -> authUserRepository.findByEmail(usernameOrEmail))
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản với username/email này."));
+    }
+
+    private String maskEmail(String email) {
+        int at = email.indexOf('@');
+        if (at <= 1) return email;
+        return email.substring(0, Math.min(2, at)) + "***" + email.substring(at);
+    }
+
+    private String maskPhone(String phone) {
+        String digits = phone.replaceAll("[^0-9]", "");
+        if (digits.length() <= 4) return phone;
+        return "***" + digits.substring(digits.length() - 4);
+    }
+
+    private String normalizePhone(String phone) {
+        String digits = phone.replaceAll("[^0-9+]", "");
+        if (digits.startsWith("+")) return digits;
+        if (digits.startsWith("0")) return "+84" + digits.substring(1);
+        return "+" + digits;
     }
 
     private record GoogleTokenInfo(String aud, String email, String name) {}

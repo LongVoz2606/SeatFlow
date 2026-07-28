@@ -79,4 +79,53 @@ public class AuthDtos {
     public record UpdateUserStatusRequest(
             Boolean enabled
     ) {}
+
+    public record ForgotPasswordOtpRequest(
+            @NotBlank(message = "Vui lòng nhập username hoặc email")
+            String usernameOrEmail,
+
+            @NotBlank(message = "Vui lòng chọn phương thức xác thực")
+            String channel
+    ) {}
+
+    public record ForgotPasswordVerifyRequest(
+            @NotBlank(message = "Vui lòng nhập username hoặc email")
+            String usernameOrEmail,
+
+            @NotBlank(message = "Vui lòng nhập mã OTP")
+            @Size(min = 6, max = 6, message = "Mã OTP gồm 6 chữ số")
+            String otp
+    ) {}
+
+    public record ResetPasswordRequest(
+            @NotBlank(message = "Thiếu resetToken")
+            String resetToken,
+
+            @NotBlank(message = "Password không được để trống")
+            @Size(min = 6, message = "Password tối thiểu 6 ký tự")
+            String newPassword
+    ) {}
+
+    public record ChangePasswordOtpRequest(
+            @NotBlank(message = "Vui lòng nhập mật khẩu hiện tại")
+            String oldPassword,
+
+            @NotBlank(message = "Vui lòng nhập mật khẩu mới")
+            @Size(min = 6, message = "Password tối thiểu 6 ký tự")
+            String newPassword
+    ) {}
+
+    public record ChangePasswordVerifyRequest(
+            @NotBlank(message = "Vui lòng nhập mã OTP")
+            @Size(min = 6, max = 6, message = "Mã OTP gồm 6 chữ số")
+            String otp
+    ) {}
+
+    public record OtpSentResponse(
+            String maskedDestination
+    ) {}
+
+    public record ResetTokenResponse(
+            String resetToken
+    ) {}
 }

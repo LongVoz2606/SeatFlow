@@ -42,3 +42,37 @@ export interface IAdminUserQuery {
   page?: number;
   size?: number;
 }
+
+export type IOtpChannel = 'EMAIL' | 'SMS';
+
+export interface IForgotPasswordOtpRequest {
+  usernameOrEmail: string;
+  channel: IOtpChannel;
+}
+
+export interface IForgotPasswordVerifyRequest {
+  usernameOrEmail: string;
+  otp: string;
+}
+
+export interface IResetPasswordRequest {
+  resetToken: string;
+  newPassword: string;
+}
+
+export interface IChangePasswordOtpRequest {
+  oldPassword: string;
+  newPassword: string;
+}
+
+export interface IChangePasswordVerifyRequest {
+  otp: string;
+}
+
+export interface IOtpSentResponse {
+  maskedDestination: string;
+}
+
+export interface IResetTokenResponse {
+  resetToken: string;
+}

@@ -51,11 +51,13 @@ export const SocialLoginButtons: React.FC<ISocialLoginButtonsProps> = ({ onSucce
             }
           },
         });
+        const width = Math.min(googleBtnRef.current.offsetWidth || 320, 400);
         google.accounts.id.renderButton(googleBtnRef.current, {
           theme: 'filled_black',
           size: 'large',
-          shape: 'pill',
-          width: 320,
+          shape: 'rectangular',
+          logo_alignment: 'left',
+          width,
         });
       })
       .catch(() => onError('Không thể tải dịch vụ đăng nhập Google.'));
@@ -114,7 +116,7 @@ export const SocialLoginButtons: React.FC<ISocialLoginButtonsProps> = ({ onSucce
             type="button"
             onClick={handleFacebookLogin}
             disabled={!facebookReady}
-            className="w-full py-2.5 rounded-xl bg-[#1877F2] hover:bg-[#166FE5] text-white font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="w-full h-10 rounded-md bg-[#1877F2] hover:bg-[#166FE5] text-white font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             <Facebook className="w-4 h-4" />
             <span>Tiếp tục với Facebook</span>
