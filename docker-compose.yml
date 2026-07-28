@@ -188,6 +188,12 @@ services:
     container_name: seatflow-frontend
     ports:
       - "3000:80"
+    depends_on:
+      - auth-service
+      - user-service
+      - event-service
+      - booking-service
+      - payment-service
 
   gateway:
     image: nginx:alpine

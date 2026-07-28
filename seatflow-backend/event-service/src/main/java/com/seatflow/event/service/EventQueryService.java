@@ -76,7 +76,7 @@ public class EventQueryService {
                     event.getLocation(), event.getEventDate(), event.getBannerUrl(),
                     event.getTotalSeats(), event.getAvailableSeats(), event.getStatus(),
                     event.getOrganizerId(), organizerName, event.getIsHot(),
-                    event.getMinPrice(), event.getMaxPrice(),
+                    event.getMinPrice(), event.getMaxPrice(), event.getCategory(),
                     seats.stream().map(this::toSeatResponse).toList()
             );
         });
@@ -88,7 +88,7 @@ public class EventQueryService {
                 e.getEventDate(), e.getBannerUrl(), e.getTotalSeats(),
                 e.getAvailableSeats(), e.getStatus(),
                 e.getOrganizerId(), e.getOrganizerId() != null ? organizerNames.get(e.getOrganizerId()) : null,
-                e.getIsHot(), e.getMinPrice(), e.getMaxPrice(), e.getCreatedAt()
+                e.getIsHot(), e.getMinPrice(), e.getMaxPrice(), e.getCategory(), e.getCreatedAt()
         );
     }
 

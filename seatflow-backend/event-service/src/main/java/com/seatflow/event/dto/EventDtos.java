@@ -21,6 +21,7 @@ public class EventDtos {
             Boolean isHot,
             BigDecimal minPrice,
             BigDecimal maxPrice,
+            String category,
             ZonedDateTime createdAt
     ) {}
 
@@ -49,6 +50,7 @@ public class EventDtos {
             Boolean isHot,
             BigDecimal minPrice,
             BigDecimal maxPrice,
+            String category,
             List<SeatResponse> seats
     ) {}
 

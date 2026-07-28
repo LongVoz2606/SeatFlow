@@ -60,6 +60,10 @@ public class EventEntity {
     @Builder.Default
     BigDecimal maxPrice = BigDecimal.ZERO;
 
+    @Column(name = "category", nullable = false, length = 50)
+    @Builder.Default
+    String category = "Music";
+
     @Column(name = "created_at", insertable = false, updatable = false)
     ZonedDateTime createdAt;
 

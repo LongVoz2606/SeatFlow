@@ -36,7 +36,7 @@ export const EventFilterBar: React.FC<IEventFilterBarProps> = ({
   priceRangeKey, onPriceRangeChange,
   organizerId, onOrganizerIdChange, organizers,
 }) => {
-  const selectClass = 'bg-slate-900 border border-slate-800 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 rounded-xl py-2.5 px-3 text-xs text-slate-100 outline-none transition-all';
+  const selectClass = 'bg-slate-900 border border-slate-800 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/30 rounded-xl py-2.5 px-3 text-xs text-slate-100 outline-none transition-all';
 
   return (
     <div className="glass-card border border-slate-800 rounded-2xl p-4 mb-8 bg-slate-950">
@@ -48,7 +48,7 @@ export const EventFilterBar: React.FC<IEventFilterBarProps> = ({
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Tìm kiếm sự kiện..."
-            className="w-full bg-slate-900 border border-slate-800 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 rounded-xl py-2.5 pl-10 pr-4 text-xs text-slate-100 placeholder-slate-600 outline-none transition-all"
+            className="w-full bg-slate-900 border border-slate-800 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/30 rounded-xl py-2.5 pl-10 pr-4 text-xs text-slate-100 placeholder-slate-600 outline-none transition-all"
           />
         </div>
 

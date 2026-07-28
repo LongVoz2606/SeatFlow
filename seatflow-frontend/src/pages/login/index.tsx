@@ -128,152 +128,156 @@ export const LoginPage: React.FC = () => {
       </div>
 
       {/* Right: form */}
-      <div className="flex items-center justify-center px-4 py-12 bg-slate-950">
+      <div className="flex items-center justify-center px-4 py-8 md:py-12 bg-slate-950">
         <div className="w-full max-w-md animate-fade-in-up">
-          <div className="glass-card border border-slate-800 rounded-3xl p-8 shadow-2xl relative overflow-hidden bg-slate-950">
+          <div className="glass-card border border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden bg-slate-950 transition-all duration-300 min-h-[570px] flex flex-col justify-between">
             <div className="absolute -top-12 -right-12 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none" />
             <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
 
-            <div className="text-center mb-8 lg:hidden">
+            <div className="text-center mb-6 lg:hidden">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 mx-auto mb-4">
                 <Ticket className="w-6 h-6 text-slate-950 stroke-[2.5]" />
               </div>
             </div>
 
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-black text-white tracking-tight mb-2">
-                {isLogin ? 'Chào mừng quay trở lại' : 'Tạo tài khoản mới'}
-              </h2>
-              <p className="text-slate-400 text-xs">
-                Hệ thống đặt vé sự kiện hiệu năng cao SeatFlow
-              </p>
-
-              <div className="flex bg-slate-900/80 p-1 rounded-xl mt-6 border border-slate-800">
-                <button
-                  onClick={() => { setIsLogin(true); setError(null); setSuccessMessage(null); }}
-                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-                    isLogin ? 'bg-cyan-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  Đăng Nhập
-                </button>
-                <button
-                  onClick={() => { setIsLogin(false); setError(null); setSuccessMessage(null); }}
-                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-                    !isLogin ? 'bg-cyan-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  Đăng Ký
-                </button>
-              </div>
-            </div>
-
-            {error && (
-              <div className="mb-6 p-4 bg-rose-950/40 border border-rose-500/30 rounded-2xl flex gap-3 items-start text-xs text-rose-300">
-                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            {successMessage && (
-              <div className="mb-6 p-4 bg-emerald-950/40 border border-emerald-500/30 rounded-2xl flex gap-3 items-start text-xs text-emerald-300">
-                <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                <span>{successMessage}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {!isLogin && (
-                <>
-                  <div>
-                    <label className="block text-slate-400 text-[10px] font-bold mb-1.5 uppercase tracking-wider">USERNAME</label>
-                    <div className="relative">
-                      <UserIcon className="absolute left-3 top-3.5 w-4 h-4 text-slate-500" />
-                      <input
-                        type="text"
-                        required
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        placeholder="Nhập username"
-                        className="w-full bg-slate-900 border border-slate-800 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 rounded-xl py-2.5 pl-10 pr-4 text-sm text-slate-100 placeholder-slate-600 outline-none transition-all"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-slate-400 text-[10px] font-bold mb-1.5 uppercase tracking-wider">HỌ VÀ TÊN</label>
-                    <div className="relative">
-                      <UserIcon className="absolute left-3 top-3.5 w-4 h-4 text-slate-500" />
-                      <input
-                        type="text"
-                        required
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        placeholder="Nhập họ và tên"
-                        className="w-full bg-slate-900 border border-slate-800 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 rounded-xl py-2.5 pl-10 pr-4 text-sm text-slate-100 placeholder-slate-600 outline-none transition-all"
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
-
+            <div className="flex-1 flex flex-col justify-between z-10 relative">
               <div>
-                <label className="block text-slate-400 text-[10px] font-bold mb-1.5 uppercase tracking-wider">
-                  {isLogin ? 'USERNAME HOẶC EMAIL' : 'EMAIL'}
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3.5 w-4 h-4 text-slate-500" />
-                  <input
-                    type="text"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder={isLogin ? "Nhập username hoặc email" : "Nhập email của bạn"}
-                    className="w-full bg-slate-900 border border-slate-800 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 rounded-xl py-2.5 pl-10 pr-4 text-sm text-slate-100 placeholder-slate-600 outline-none transition-all"
-                  />
-                </div>
-              </div>
+                <div className="text-center mb-6">
+                  <h2 className="text-2xl font-black text-white tracking-tight mb-2">
+                    {isLogin ? 'Chào mừng quay trở lại' : 'Tạo tài khoản mới'}
+                  </h2>
+                  <p className="text-slate-400 text-xs">
+                    Hệ thống đặt vé sự kiện hiệu năng cao SeatFlow
+                  </p>
 
-              <div>
-                <label className="block text-slate-400 text-[10px] font-bold mb-1.5 uppercase tracking-wider">MẬT KHẨU</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3.5 w-4 h-4 text-slate-500" />
-                  <input
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Nhập mật khẩu"
-                    className="w-full bg-slate-900 border border-slate-800 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 rounded-xl py-2.5 pl-10 pr-4 text-sm text-slate-100 placeholder-slate-600 outline-none transition-all"
-                  />
+                  <div className="flex bg-slate-900/80 p-1 rounded-xl mt-5 border border-slate-800">
+                    <button
+                      onClick={() => { setIsLogin(true); setError(null); setSuccessMessage(null); }}
+                      className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                        isLogin ? 'bg-cyan-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      Đăng Nhập
+                    </button>
+                    <button
+                      onClick={() => { setIsLogin(false); setError(null); setSuccessMessage(null); }}
+                      className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                        !isLogin ? 'bg-cyan-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      Đăng Ký
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full mt-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
-                {loading ? (
-                  <div className="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                ) : isLogin ? (
-                  <>
-                    <span>Đăng Nhập Ngay</span>
-                    <LogIn className="w-4 h-4" />
-                  </>
-                ) : (
-                  <>
-                    <span>Đăng Ký Tài Khoản</span>
-                    <UserPlus className="w-4 h-4" />
-                  </>
+                {error && (
+                  <div className="mb-4 p-3 bg-rose-950/40 border border-rose-500/30 rounded-xl flex gap-3 items-start text-xs text-rose-300">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <span>{error}</span>
+                  </div>
                 )}
-              </button>
-            </form>
 
-            <SocialLoginButtons
-              onSuccess={applyLoginResponse}
-              onError={(message) => setError(message)}
-            />
+                {successMessage && (
+                  <div className="mb-4 p-3 bg-emerald-950/40 border border-emerald-500/30 rounded-xl flex gap-3 items-start text-xs text-emerald-300">
+                    <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <span>{successMessage}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-3.5">
+                  {!isLogin && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block text-slate-400 text-[10px] font-bold mb-1 uppercase tracking-wider">USERNAME</label>
+                        <div className="relative">
+                          <UserIcon className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+                          <input
+                            type="text"
+                            required
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            placeholder="Username"
+                            className="w-full bg-slate-900 border border-slate-800 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 rounded-xl py-2 pl-9 pr-3 text-xs text-slate-100 placeholder-slate-600 outline-none transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-400 text-[10px] font-bold mb-1 uppercase tracking-wider">HỌ VÀ TÊN</label>
+                        <div className="relative">
+                          <UserIcon className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+                          <input
+                            type="text"
+                            required
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                            placeholder="Họ và tên"
+                            className="w-full bg-slate-900 border border-slate-800 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 rounded-xl py-2 pl-9 pr-3 text-xs text-slate-100 placeholder-slate-600 outline-none transition-all"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-slate-400 text-[10px] font-bold mb-1 uppercase tracking-wider">
+                      {isLogin ? 'USERNAME HOẶC EMAIL' : 'EMAIL'}
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+                      <input
+                        type="text"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder={isLogin ? "Nhập username hoặc email" : "Nhập email của bạn"}
+                        className="w-full bg-slate-900 border border-slate-800 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 rounded-xl py-2 pl-9 pr-3 text-xs text-slate-100 placeholder-slate-600 outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 text-[10px] font-bold mb-1 uppercase tracking-wider">MẬT KHẨU</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+                      <input
+                        type="password"
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Nhập mật khẩu"
+                        className="w-full bg-slate-900 border border-slate-800 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 rounded-xl py-2 pl-9 pr-3 text-xs text-slate-100 placeholder-slate-600 outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full mt-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    {loading ? (
+                      <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                    ) : isLogin ? (
+                      <>
+                        <span>Đăng Nhập Ngay</span>
+                        <LogIn className="w-3.5 h-3.5" />
+                      </>
+                    ) : (
+                      <>
+                        <span>Đăng Ký Tài Khoản</span>
+                        <UserPlus className="w-3.5 h-3.5" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+
+              <SocialLoginButtons
+                onSuccess={applyLoginResponse}
+                onError={(message) => setError(message)}
+              />
+            </div>
           </div>
         </div>
       </div>

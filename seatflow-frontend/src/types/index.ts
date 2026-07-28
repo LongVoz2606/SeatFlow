@@ -29,6 +29,7 @@ export interface IEvent {
   isHot: boolean;
   minPrice: number;
   maxPrice: number;
+  category: string;
   seats?: ISeat[];
 }
 
