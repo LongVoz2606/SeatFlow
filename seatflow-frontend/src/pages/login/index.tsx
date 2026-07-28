@@ -33,7 +33,7 @@ export const LoginPage: React.FC = () => {
       localStorage.setItem('username', userUsername);
       localStorage.setItem('userId', String(userId));
       localStorage.setItem('role', role);
-      navigate('/');
+      navigate(role === 'ADMIN' ? '/admin' : '/');
     } else {
       setError(response.message || 'Đăng nhập không thành công.');
     }
