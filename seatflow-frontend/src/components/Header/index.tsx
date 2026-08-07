@@ -107,17 +107,19 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* TicketBox-style Sub Navigation Bar for Categories */}
-      <div className="border-t border-slate-800/80 bg-slate-950/90 text-xs font-semibold text-slate-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-6 overflow-x-auto h-10 scrollbar-none whitespace-nowrap">
-          <Link to="/search" className="hover:text-cyan-400 transition-colors py-1 text-cyan-400 font-bold">Tất cả sự kiện</Link>
-          <Link to="/search?category=Music" className="hover:text-cyan-400 transition-colors py-1">Concert Ca Nhạc</Link>
-          <Link to="/search?category=Arts%20%26%20Theater" className="hover:text-cyan-400 transition-colors py-1">Sân Khấu & Nghệ Thuật</Link>
-          <Link to="/search?category=Sports" className="hover:text-cyan-400 transition-colors py-1">Thể Thao</Link>
-          <Link to="/search?category=Tech%20%26%20Seminar" className="hover:text-cyan-400 transition-colors py-1">Hội Thảo & Công Nghệ</Link>
-          <Link to="/search?category=Entertainment" className="hover:text-cyan-400 transition-colors py-1">Lễ Hội & Giải Trí</Link>
+      {/* TicketBox-style Sub Navigation Bar for Categories (Only show on main discovery pages) */}
+      {(location.pathname === '/' || location.pathname === '/search' || location.pathname.startsWith('/events')) && (
+        <div className="border-t border-slate-800/80 bg-slate-950/90 text-xs font-semibold text-slate-300">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-6 overflow-x-auto h-10 scrollbar-none whitespace-nowrap">
+            <Link to="/search" className="hover:text-cyan-400 transition-colors py-1 text-cyan-400 font-bold">Tất cả sự kiện</Link>
+            <Link to="/search?category=Music" className="hover:text-cyan-400 transition-colors py-1">Concert Ca Nhạc</Link>
+            <Link to="/search?category=Arts%20%26%20Theater" className="hover:text-cyan-400 transition-colors py-1">Sân Khấu & Nghệ Thuật</Link>
+            <Link to="/search?category=Sports" className="hover:text-cyan-400 transition-colors py-1">Thể Thao</Link>
+            <Link to="/search?category=Tech%20%26%20Seminar" className="hover:text-cyan-400 transition-colors py-1">Hội Thảo & Công Nghệ</Link>
+            <Link to="/search?category=Entertainment" className="hover:text-cyan-400 transition-colors py-1">Lễ Hội & Giải Trí</Link>
+          </div>
         </div>
-      </div>
+      )}
     </header>
   );
 };

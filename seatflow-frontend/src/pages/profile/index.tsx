@@ -8,7 +8,7 @@ import authApi from '../../services/apis/auth/auth.api';
 import CountdownTimer from '../../components/CountdownTimer';
 import { OtpModal } from '../../components/OtpModal';
 import {
-  User, Ticket, History, ShoppingCart, LogOut, Save, ShieldAlert, CheckCircle, ExternalLink, Calendar, Wallet, KeyRound
+  User, Ticket, History, ShoppingCart, LogOut, Save, ShieldAlert, CheckCircle, ExternalLink, Calendar, Wallet, KeyRound, Building2
 } from 'lucide-react';
 
 export const ProfilePage: React.FC = () => {
@@ -264,6 +264,17 @@ export const ProfilePage: React.FC = () => {
               >
                 <History className="w-4 h-4" />
                 <span>Lịch sử giao dịch</span>
+              </button>
+
+              <button
+                onClick={() => navigate('/organizers/dashboard')}
+                className="w-full py-2.5 px-4 rounded-xl font-semibold text-xs flex items-center justify-between transition-all bg-purple-950/60 hover:bg-purple-900/80 text-purple-300 border border-purple-500/30"
+              >
+                <div className="flex items-center gap-3">
+                  <Building2 className="w-4 h-4 text-purple-400" />
+                  <span>Kênh Ban Tổ Chức</span>
+                </div>
+                <ExternalLink className="w-3.5 h-3.5 opacity-60" />
               </button>
             </nav>
           </div>
