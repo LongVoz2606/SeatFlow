@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { HotEventsSection } from './components/HotEventsSection';
 import { EventCard } from './components/EventCard';
+import { CategoryCarouselRow } from './components/CategoryCarouselRow';
 import { Link } from 'react-router-dom';
 
 const getCategoryTitle = (cat: string) => {
@@ -140,36 +141,34 @@ export const EventListPage: React.FC = () => {
 
       <HotEventsSection />
 
-      {/* Events Grid / Netflix Rows by Category */}
+      {/* Events Grid / Netflix Rows by Category with Next/Prev Carousel Controls */}
       <div className="mt-12 space-y-12">
         {CATEGORIES.map((cat) => {
           const eventsInCategory = (events ?? []).filter((e) => e.category === cat.key);
           if (eventsInCategory.length === 0) return null;
 
           return (
-            <div key={cat.key} className="mb-12 animate-fade-in-up">
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
-                  <span className="w-1.5 h-5 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-full" />
-                  <span>{cat.label}</span>
-                  <span className="text-xs text-slate-500 font-normal">({eventsInCategory.length})</span>
-                </h2>
+            <CategoryCarouselRow
+              key={cat.key}
+              categoryKey={cat.key}
+              label={cat.label}
+              count={eventsInCategory.length}
+              viewAllLink={
                 <Link
                   to={`/search?category=${encodeURIComponent(cat.key)}`}
-                  className="text-xs font-bold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors"
+                  className="text-xs font-bold text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors"
                 >
                   <span>Xem tất cả</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
-              </div>
-              <div className="flex gap-6 overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-thin scrollbar-track-slate-950 scrollbar-thumb-slate-800 hover:scrollbar-thumb-slate-700">
-                {eventsInCategory.map((event) => (
-                  <div key={event.id} className="w-80 flex-shrink-0 transition-all duration-300 hover:scale-[1.02]">
-                    <EventCard event={event} />
-                  </div>
-                ))}
-              </div>
-            </div>
+              }
+            >
+              {eventsInCategory.map((event) => (
+                <div key={event.id} className="w-80 flex-shrink-0">
+                  <EventCard event={event} />
+                </div>
+              ))}
+            </CategoryCarouselRow>
           );
         })}
       </div>
