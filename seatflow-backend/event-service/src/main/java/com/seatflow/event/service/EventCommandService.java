@@ -73,6 +73,7 @@ public class EventCommandService {
                 .location(request.location())
                 .eventDate(request.eventDate())
                 .bannerUrl(request.bannerUrl())
+                .category(request.category() != null ? request.category() : "Music")
                 .totalSeats(totalSeats)
                 .availableSeats(totalSeats)
                 .status("ACTIVE")

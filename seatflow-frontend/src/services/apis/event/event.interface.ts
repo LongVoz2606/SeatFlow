@@ -27,5 +27,6 @@ export interface ICreateEventBody {
   location: string;
   eventDate: string;
   bannerUrl: string;
+  category?: string;
   seatSections: ISeatSectionBody[];
 }

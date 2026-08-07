@@ -67,6 +67,7 @@ public class EventDtos {
             String location,
             ZonedDateTime eventDate,
             String bannerUrl,
+            String category,
             List<SeatSectionRequest> seatSections
     ) {}
 

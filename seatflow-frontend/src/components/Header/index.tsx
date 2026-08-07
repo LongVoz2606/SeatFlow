@@ -70,14 +70,6 @@ export const Header: React.FC = () => {
 
         {/* Right Actions */}
         <div className="flex items-center gap-3 flex-shrink-0">
-          <Link
-            to="/organizers/dashboard"
-            className="flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-full bg-cyan-950/60 text-cyan-300 border border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-950 transition-all duration-200 active:scale-95 shadow-sm"
-          >
-            <PlusCircle className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Thêm sự kiện</span>
-          </Link>
-
           {role === 'ADMIN' && (
             <Link
               to="/admin"
@@ -107,9 +99,9 @@ export const Header: React.FC = () => {
           ) : (
             <Link
               to="/login"
-              className="py-2 px-5 rounded-full border border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-950/30 text-cyan-400 hover:text-cyan-300 font-bold text-xs transition-all duration-200 active:scale-95 shadow-sm"
+              className="py-2 px-5 rounded-full border border-purple-500/30 bg-purple-600/20 hover:border-purple-400 hover:bg-purple-600/30 text-purple-200 font-bold text-xs transition-all duration-200 active:scale-95 shadow-sm"
             >
-              Đăng Nhập
+              Đăng Nhập / Đăng Ký
             </Link>
           )}
         </div>

@@ -19,7 +19,9 @@ export const CreateEventForm: React.FC<ICreateEventFormProps> = ({ onSubmit, onC
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const inputClass = 'w-full bg-slate-900 border border-slate-800 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 rounded-xl py-2.5 px-4 text-sm text-slate-100 placeholder-slate-600 outline-none transition-all';
+  const [category, setCategory] = useState('Music');
+
+  const inputClass = 'w-full bg-slate-900/90 border-b-2 border-b-purple-500/80 border-x-0 border-t-0 focus:border-b-purple-400 rounded-t-xl py-2.5 px-4 text-sm text-slate-100 placeholder-slate-500 outline-none transition-all duration-200';
 
   const updateSection = (index: number, patch: Partial<ISeatSectionBody>) => {
     setSeatSections((prev) => prev.map((s, i) => (i === index ? { ...s, ...patch } : s)));
@@ -39,6 +41,7 @@ export const CreateEventForm: React.FC<ICreateEventFormProps> = ({ onSubmit, onC
         location,
         eventDate: new Date(eventDate).toISOString(),
         bannerUrl,
+        category,
         seatSections,
       });
     } catch (err: any) {
@@ -49,7 +52,7 @@ export const CreateEventForm: React.FC<ICreateEventFormProps> = ({ onSubmit, onC
   };
 
   return (
-    <div className="glass-card border border-slate-800 rounded-2xl p-6 bg-slate-950 mb-8">
+    <div className="rounded-3xl border border-slate-800/80 p-6 bg-slate-900/60 backdrop-blur-md mb-8 shadow-xl">
       <h3 className="text-lg font-bold text-white mb-4">Tạo sự kiện mới</h3>
 
       {error && (
@@ -62,11 +65,18 @@ export const CreateEventForm: React.FC<ICreateEventFormProps> = ({ onSubmit, onC
       <form onSubmit={handleSubmit} className="space-y-4">
         <input required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Tên sự kiện" className={inputClass} />
         <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Mô tả sự kiện" rows={3} className={inputClass} />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input required value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Địa điểm" className={inputClass} />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <input required value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Địa điểm (VD: Sân vận động Mỹ Đình, Hà Nội)" className={inputClass} />
           <input required type="datetime-local" value={eventDate} onChange={(e) => setEventDate(e.target.value)} className={inputClass} />
+          <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass}>
+            <option value="Music">Concert Ca Nhạc</option>
+            <option value="Tech & Seminar">Hội Thảo & Công Nghệ</option>
+            <option value="Arts & Theater">Kịch Nghệ & Triển Lãm</option>
+            <option value="Sports">Giải Đấu Thể Thao</option>
+            <option value="Entertainment">Lễ Hội & Giải Trí</option>
+          </select>
         </div>
-        <input value={bannerUrl} onChange={(e) => setBannerUrl(e.target.value)} placeholder="Banner URL" className={inputClass} />
+        <input value={bannerUrl} onChange={(e) => setBannerUrl(e.target.value)} placeholder="Banner URL hình ảnh sự kiện" className={inputClass} />
 
         <div>
           <div className="flex items-center justify-between mb-2">
