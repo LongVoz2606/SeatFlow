@@ -10,8 +10,8 @@ export const HotEventsSection: React.FC = () => {
   const { data: hotEvents } = useQuery({
     queryKey: ['events', 'hot'],
     queryFn: async () => {
-      const response = await eventApi.getEvents({ params: { hot: true } });
-      return response.data;
+      const response = await eventApi.getEvents({ params: { hot: true, size: 50 } });
+      return response.data?.content ?? [];
     },
   });
 

@@ -59,8 +59,8 @@ export const ProfilePage: React.FC = () => {
   const { data: events } = useQuery({
     queryKey: ['events'],
     queryFn: async () => {
-      const response = await eventApi.getEvents();
-      return response.data;
+      const response = await eventApi.getEvents({ params: { size: 100 } });
+      return response.data?.content ?? [];
     },
     enabled: !!token,
   });

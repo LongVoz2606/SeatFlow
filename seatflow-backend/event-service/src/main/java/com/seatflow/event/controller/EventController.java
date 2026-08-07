@@ -29,14 +29,16 @@ public class EventController {
     EventCommandService eventCommandService;
 
     @GetMapping
-    @Operation(summary = "Lấy danh sách sự kiện đang diễn ra (hỗ trợ tìm kiếm & lọc)")
-    public ResponseEntity<ApiResponse<List<EventDtos.EventResponse>>> getAllEvents(
+    @Operation(summary = "Lấy danh sách sự kiện đang diễn ra (hỗ trợ tìm kiếm & lọc & phân trang)")
+    public ResponseEntity<ApiResponse<com.seatflow.common.response.PageResponse<EventDtos.EventResponse>>> getAllEvents(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String location,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) Boolean hot,
-            @RequestParam(required = false) Long organizerId) {
+            @RequestParam(required = false) Long organizerId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         EventSearchCriteria criteria = EventSearchCriteria.builder()
                 .search(search)
                 .location(location)
@@ -45,7 +47,8 @@ public class EventController {
                 .hot(hot)
                 .organizerId(organizerId)
                 .build();
-        return ResponseEntity.ok(ApiResponse.ok(eventQueryService.searchEvents(criteria)));
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        return ResponseEntity.ok(ApiResponse.ok(eventQueryService.searchEventsPage(criteria, pageable)));
     }
 
     @GetMapping("/mine")

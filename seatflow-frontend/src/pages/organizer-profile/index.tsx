@@ -21,8 +21,8 @@ export const OrganizerProfilePage: React.FC = () => {
   const { data: events } = useQuery({
     queryKey: ['events', 'by-organizer', organizerId],
     queryFn: async () => {
-      const response = await eventApi.getEvents({ params: { organizerId } });
-      return response.data;
+      const response = await eventApi.getEvents({ params: { organizerId, size: 100 } });
+      return response.data?.content ?? [];
     },
     enabled: !!organizer,
   });

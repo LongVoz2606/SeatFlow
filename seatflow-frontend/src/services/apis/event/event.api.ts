@@ -1,9 +1,9 @@
 import { apiService, IApiRequestParams } from '../index';
-import { IApiResponse, IEvent } from '../../../types';
+import { IApiResponse, IEvent, IPageResponse } from '../../../types';
 import { ICreateEventBody, IEventQuery } from './event.interface';
 
 export default {
-  getEvents(params?: IApiRequestParams<null, IEventQuery, null>): Promise<IApiResponse<IEvent[]>> {
+  getEvents(params?: IApiRequestParams<null, IEventQuery, null>): Promise<IApiResponse<IPageResponse<IEvent>>> {
     return apiService({
       url: '/events',
       method: 'GET',

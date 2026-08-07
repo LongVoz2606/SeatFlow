@@ -9,8 +9,8 @@ export const HotEventsTab: React.FC = () => {
   const { data: events, isLoading } = useQuery({
     queryKey: ['events', 'admin-all'],
     queryFn: async () => {
-      const response = await eventApi.getEvents();
-      return response.data;
+      const response = await eventApi.getEvents({ params: { size: 100 } });
+      return response.data?.content ?? [];
     },
   });
 

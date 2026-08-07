@@ -42,6 +42,14 @@ public class EventQueryService {
     }
 
     @Transactional(readOnly = true)
+    public com.seatflow.common.response.PageResponse<EventDtos.EventResponse> searchEventsPage(
+            EventSearchCriteria criteria, org.springframework.data.domain.Pageable pageable) {
+        org.springframework.data.domain.Page<EventEntity> page = eventRepository.findAll(EventSpecification.bySearchCriteria(criteria), pageable);
+        List<EventDtos.EventResponse> content = toEventResponses(page.getContent());
+        return com.seatflow.common.response.PageResponse.of(content, page.getNumber(), page.getSize(), page.getTotalElements());
+    }
+
+    @Transactional(readOnly = true)
     public List<EventDtos.EventResponse> findMyEvents(Long organizerAuthUserId) {
         OrganizerEntity organizer = organizerRepository.findByAuthUserId(organizerAuthUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Bạn chưa đăng ký làm nhà tổ chức."));

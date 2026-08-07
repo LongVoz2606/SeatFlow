@@ -10,6 +10,8 @@ export interface IEventQuery {
   maxPrice?: number;
   hot?: boolean;
   organizerId?: number;
+  page?: number;
+  size?: number;
 }
 
 export interface ISeatSectionBody {

@@ -36,6 +36,9 @@ export const SearchEventsPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const ITEMS_PER_PAGE = 6;
 
+  const initialPageSize = Number(searchParams.get('size')) || 6;
+  const [pageSize, setPageSize] = useState<number>(initialPageSize);
+
   // Sync state with URL params changes
   useEffect(() => {
     setSearchInput(searchParams.get('q') || '');
@@ -45,6 +48,8 @@ export const SearchEventsPage: React.FC = () => {
     setOrganizerId(searchParams.get('organizerId') || '');
     const p = Number(searchParams.get('page')) || 1;
     setCurrentPage(p);
+    const s = Number(searchParams.get('size')) || 6;
+    setPageSize(s);
   }, [searchParams]);
 
   useEffect(() => {
@@ -95,6 +100,12 @@ export const SearchEventsPage: React.FC = () => {
     updateUrlParams({ category: catKey || null, page: null });
   };
 
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
+    updateUrlParams({ size: String(size), page: null });
+  };
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     updateUrlParams({ page: page > 1 ? String(page) : null });
@@ -109,6 +120,7 @@ export const SearchEventsPage: React.FC = () => {
     setOrganizerId('');
     setSelectedCategory(null);
     setCurrentPage(1);
+    setPageSize(6);
     setSearchParams({});
   };
 
@@ -117,8 +129,9 @@ export const SearchEventsPage: React.FC = () => {
     [priceRangeKey]
   );
 
-  const { data: events, isLoading, error } = useQuery({
-    queryKey: ['events', debouncedSearch, location, priceRangeKey, organizerId],
+  // Backend API query returning page response
+  const { data: pageResponse, isLoading, error } = useQuery({
+    queryKey: ['events', debouncedSearch, location, priceRangeKey, organizerId, currentPage - 1, pageSize],
     queryFn: async () => {
       const response = await eventApi.getEvents({
         params: {
@@ -127,16 +140,18 @@ export const SearchEventsPage: React.FC = () => {
           minPrice: priceRange?.minPrice,
           maxPrice: priceRange?.maxPrice,
           organizerId: organizerId ? Number(organizerId) : undefined,
+          page: currentPage - 1,
+          size: pageSize,
         },
       });
       return response.data;
     },
   });
 
-  const { data: allEvents } = useQuery({
+  const { data: allEventsResponse } = useQuery({
     queryKey: ['events', 'all-for-filters'],
     queryFn: async () => {
-      const response = await eventApi.getEvents();
+      const response = await eventApi.getEvents({ params: { size: 100 } });
       return response.data;
     },
   });
@@ -150,22 +165,18 @@ export const SearchEventsPage: React.FC = () => {
   });
 
   const locationOptions = useMemo(
-    () => Array.from(new Set((allEvents ?? []).map((e) => e.location))),
-    [allEvents]
+    () => Array.from(new Set((allEventsResponse?.content ?? []).map((e) => e.location))),
+    [allEventsResponse]
   );
 
+  const rawEvents = pageResponse?.content ?? [];
+  const totalElements = pageResponse?.totalElements ?? 0;
+  const totalPages = pageResponse?.totalPages ?? 1;
+
   const filteredEvents = useMemo(() => {
-    if (!events) return [];
-    if (!selectedCategory) return events;
-    return events.filter(e => e.category === selectedCategory);
-  }, [events, selectedCategory]);
-
-  const totalPages = Math.ceil(filteredEvents.length / ITEMS_PER_PAGE);
-
-  const paginatedEvents = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredEvents.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredEvents, currentPage]);
+    if (!selectedCategory) return rawEvents;
+    return rawEvents.filter(e => e.category === selectedCategory);
+  }, [rawEvents, selectedCategory]);
 
   const hasActiveFilters = !!(searchInput || location || priceRangeKey || organizerId || selectedCategory);
 
@@ -176,6 +187,35 @@ export const SearchEventsPage: React.FC = () => {
     { key: 'Sports', label: 'Giải Đấu Thể Thao' },
     { key: 'Entertainment', label: 'Lễ Hội & Giải Trí' }
   ];
+
+  // Truncated pagination pages generator with ellipsis (...)
+  const getPaginationPages = () => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    const pages: (number | string)[] = [];
+    pages.push(1);
+
+    if (currentPage > 3) {
+      pages.push('...');
+    }
+
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+
+    for (let i = start; i <= end; i++) {
+      if (!pages.includes(i)) pages.push(i);
+    }
+
+    if (currentPage < totalPages - 2) {
+      pages.push('...');
+    }
+
+    if (!pages.includes(totalPages)) {
+      pages.push(totalPages);
+    }
+    return pages;
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -241,12 +281,12 @@ export const SearchEventsPage: React.FC = () => {
         onResetFilters={handleResetFilters}
       />
 
-      {/* Event Results Grid */}
+      {/* Event Results Grid & Top Controls */}
       <div className="mt-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
             <Ticket className="w-5 h-5 text-purple-400" />
-            <span>Danh sách sự kiện ({filteredEvents.length})</span>
+            <span>Danh sách sự kiện ({totalElements})</span>
             {selectedCategory && (
               <span className="text-xs bg-purple-950/80 text-purple-300 border border-purple-500/30 px-3 py-0.5 rounded-full font-medium">
                 {getCategoryTitle(selectedCategory)}
@@ -254,11 +294,28 @@ export const SearchEventsPage: React.FC = () => {
             )}
           </h2>
 
-          {totalPages > 1 && (
-            <span className="text-xs text-purple-300/70 font-medium">
-              Trang <strong className="text-white">{currentPage}</strong> / {totalPages}
-            </span>
-          )}
+          <div className="flex items-center gap-4 text-xs">
+            {/* Page size dropdown (6, 12, 24, 48) */}
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400">Hiển thị mỗi trang:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                className="bg-slate-900/90 border-b-2 border-b-purple-500/80 border-x-0 border-t-0 rounded-t-lg py-1 px-2 text-xs font-bold text-purple-300 outline-none cursor-pointer"
+              >
+                <option value={6}>6 sự kiện</option>
+                <option value={12}>12 sự kiện</option>
+                <option value={24}>24 sự kiện</option>
+                <option value={48}>48 sự kiện</option>
+              </select>
+            </div>
+
+            {totalPages > 1 && (
+              <span className="text-purple-300/70 font-medium">
+                Trang <strong className="text-white">{currentPage}</strong> / {totalPages}
+              </span>
+            )}
+          </div>
         </div>
 
         {error ? (
@@ -268,7 +325,7 @@ export const SearchEventsPage: React.FC = () => {
           </div>
         ) : isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: pageSize }).map((_, i) => (
               <div key={i} className="rounded-3xl border border-slate-800 overflow-hidden bg-slate-900/40">
                 <div className="h-48 w-full animate-shimmer" />
                 <div className="p-6 space-y-3">
@@ -294,16 +351,16 @@ export const SearchEventsPage: React.FC = () => {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {paginatedEvents.map((event, index) => (
+              {filteredEvents.map((event, index) => (
                 <div key={event.id} className="animate-fade-in-up" style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}>
                   <EventCard event={event} />
                 </div>
               ))}
             </div>
 
-            {/* Material You MD3 Pill-shaped Pagination Controls */}
+            {/* Material You MD3 Truncated Pagination Controls */}
             {totalPages > 1 && (
-              <div className="mt-12 flex items-center justify-center gap-2 pt-6 border-t border-purple-900/20">
+              <div className="mt-12 flex flex-wrap items-center justify-center gap-2 pt-6 border-t border-purple-900/20">
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
@@ -312,9 +369,17 @@ export const SearchEventsPage: React.FC = () => {
                   Trang trước
                 </button>
 
-                <div className="flex items-center gap-1.5 px-2">
-                  {Array.from({ length: totalPages }).map((_, idx) => {
-                    const pageNum = idx + 1;
+                <div className="flex flex-wrap items-center gap-1.5 px-2">
+                  {getPaginationPages().map((pageItem, idx) => {
+                    if (pageItem === '...') {
+                      return (
+                        <span key={`ellipsis-${idx}`} className="w-8 text-center text-slate-500 font-bold">
+                          ...
+                        </span>
+                      );
+                    }
+
+                    const pageNum = pageItem as number;
                     const isActive = pageNum === currentPage;
                     return (
                       <button

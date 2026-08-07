@@ -30,8 +30,8 @@ export const EventListPage: React.FC = () => {
   const { data: events, isLoading, error } = useQuery({
     queryKey: ['events', 'home-list'],
     queryFn: async () => {
-      const response = await eventApi.getEvents();
-      return response.data;
+      const response = await eventApi.getEvents({ params: { size: 100 } });
+      return response.data?.content ?? [];
     },
   });
 
