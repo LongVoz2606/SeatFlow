@@ -106,24 +106,14 @@ export const EventListPage: React.FC = () => {
     { key: 'Entertainment', label: 'Lễ Hội & Giải Trí', icon: PartyPopper }
   ];
 
-  if (isLoading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="rounded-2xl border border-slate-800 overflow-hidden bg-slate-950">
-              <div className="h-48 w-full animate-shimmer" />
-              <div className="p-5 space-y-3">
-                <div className="h-4 w-3/4 rounded animate-shimmer" />
-                <div className="h-3 w-full rounded animate-shimmer" />
-                <div className="h-3 w-2/3 rounded animate-shimmer" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const handleResetFilters = () => {
+    setSearchInput('');
+    setDebouncedSearch('');
+    setLocation('');
+    setPriceRangeKey('');
+    setOrganizerId('');
+    setSelectedCategory(null);
+  };
 
   if (error) {
     return (
@@ -250,10 +240,25 @@ export const EventListPage: React.FC = () => {
         organizerId={organizerId}
         onOrganizerIdChange={setOrganizerId}
         organizers={organizers ?? []}
+        hasActiveFilters={hasActiveFilters}
+        onResetFilters={handleResetFilters}
       />
 
       {/* Events Grid / Netflix Rows */}
-      {hasActiveFilters ? (
+      {isLoading ? (
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border border-slate-800 overflow-hidden bg-slate-950">
+              <div className="h-48 w-full animate-shimmer" />
+              <div className="p-5 space-y-3">
+                <div className="h-4 w-3/4 rounded animate-shimmer" />
+                <div className="h-3 w-full rounded animate-shimmer" />
+                <div className="h-3 w-2/3 rounded animate-shimmer" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : hasActiveFilters ? (
         <div className="mt-8">
           <h2 className="text-xl font-bold text-slate-100 mb-6 flex items-center gap-2">
             <Ticket className="w-5 h-5 text-violet-400" />
