@@ -170,15 +170,15 @@ export const SearchEventsPage: React.FC = () => {
         </p>
       </div>
 
-      {/* Quick Category Chips */}
+      {/* Quick Category Chips (MD3 Pill Shapes with Active Press Feedback) */}
       <div className="mb-6">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2.5">
           <button
             onClick={() => handleCategorySelect(null)}
-            className={`px-3.5 py-1.5 rounded-xl border text-xs font-bold transition-all ${
+            className={`px-4 py-2 rounded-full border text-xs font-extrabold transition-all duration-200 active:scale-95 shadow-sm ${
               !selectedCategory
-                ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 shadow-md shadow-cyan-500/10'
-                : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700 hover:text-slate-200'
+                ? 'bg-purple-600/90 border-purple-500 text-white shadow-purple-500/20'
+                : 'border-slate-800/80 bg-slate-900/60 text-slate-300 hover:border-slate-700 hover:text-white'
             }`}
           >
             Tất cả thể loại
@@ -189,10 +189,10 @@ export const SearchEventsPage: React.FC = () => {
               <button
                 key={cat.key}
                 onClick={() => handleCategorySelect(isActive ? null : cat.key)}
-                className={`px-3.5 py-1.5 rounded-xl border text-xs font-bold transition-all ${
+                className={`px-4 py-2 rounded-full border text-xs font-extrabold transition-all duration-200 active:scale-95 shadow-sm ${
                   isActive
-                    ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 shadow-md shadow-cyan-500/10'
-                    : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700 hover:text-slate-200'
+                    ? 'bg-purple-600/90 border-purple-500 text-white shadow-purple-500/20'
+                    : 'border-slate-800/80 bg-slate-900/60 text-slate-300 hover:border-slate-700 hover:text-white'
                 }`}
               >
                 {cat.label}
