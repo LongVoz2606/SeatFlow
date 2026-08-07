@@ -113,13 +113,6 @@ Hệ thống sẽ tự động khởi tạo:
 - **Nginx API Gateway**: `http://localhost:80` (điểm truy cập chính, khuyến nghị dùng)
 - **Frontend App (direct)**: `http://localhost:3000`
 - **Backend services**: `localhost:8081-8085` (Swagger UI mỗi service: `/swagger-ui.html`)
-
-### Tài khoản mẫu (seed data)
-| Vai trò | Username | Ghi chú |
-|---|---|---|
-| Admin | `admin` | Đã seed sẵn, dùng cho `/admin` |
-| User | `johndoe` | Tài khoản người dùng thường |
-
 ---
 
 ## ⚙️ REST API Endpoints Overview (qua Gateway)
