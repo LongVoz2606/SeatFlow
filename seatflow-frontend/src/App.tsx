@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Header } from './components/Header';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { EventListPage } from './pages/event-list';
+import { SearchEventsPage } from './pages/search';
 import { EventDetailPage } from './pages/event-detail';
 import { BookingConfirmPage } from './pages/booking-confirm';
 import { LoginPage } from './pages/login';
@@ -30,6 +31,7 @@ export const App: React.FC = () => {
           <main className="flex-1">
             <Routes>
               <Route path="/" element={<EventListPage />} />
+              <Route path="/search" element={<SearchEventsPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/events/:id" element={<EventDetailPage />} />
