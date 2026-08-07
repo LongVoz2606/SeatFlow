@@ -54,10 +54,10 @@ export const Header: React.FC = () => {
   };
 
   // Fetch recommended hot events for search dropdown
-  const { data: eventsData } = useQuery({
+  const { data: eventsData, isLoading: isEventsLoading } = useQuery({
     queryKey: ['events', 'search-suggestions'],
     queryFn: async () => {
-      const response = await eventApi.getEvents({ page: 0, size: 6 } as any);
+      const response = await eventApi.getEvents({ params: { page: 0, size: 6 } });
       return response.data?.content || [];
     },
     enabled: isDropdownOpen,
@@ -252,7 +252,12 @@ export const Header: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {eventsData && eventsData.length > 0 ? (
+                  {isEventsLoading ? (
+                    <div className="col-span-3 py-6 flex items-center justify-center gap-2 text-xs text-purple-300 font-semibold">
+                      <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                      <span>Đang tải danh sách gợi ý...</span>
+                    </div>
+                  ) : eventsData && eventsData.length > 0 ? (
                     eventsData.slice(0, 3).map((event) => (
                       <div
                         key={event.id}
@@ -287,7 +292,7 @@ export const Header: React.FC = () => {
                     ))
                   ) : (
                     <div className="col-span-3 py-6 text-center text-xs text-slate-500">
-                      Đang tải danh sách gợi ý sự kiện nổi bật...
+                      Chưa có sự kiện gợi ý nào.
                     </div>
                   )}
                 </div>
