@@ -57,11 +57,11 @@ export const Header: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Bạn tìm gì hôm nay? (VD: Rap Việt, Concert, Thể thao...)"
-            className="w-full bg-slate-900/90 border border-slate-800 focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/30 rounded-xl py-2 pl-4 pr-24 text-xs text-slate-100 placeholder-slate-500 outline-none transition-all"
+            className="w-full bg-slate-900/90 border-b-2 border-b-slate-700 border-x-0 border-t-0 focus:border-b-cyan-400 rounded-t-xl py-2 pl-4 pr-24 text-xs text-slate-100 placeholder-slate-500 outline-none transition-all duration-200"
           />
           <button
             type="submit"
-            className="absolute right-1.5 top-1 bottom-1 px-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs rounded-lg flex items-center gap-1 transition-all"
+            className="absolute right-1 top-1 bottom-1 px-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-extrabold text-xs rounded-full flex items-center gap-1 transition-all duration-200 active:scale-95 shadow-sm"
           >
             <Search className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Tìm kiếm</span>
@@ -72,7 +72,7 @@ export const Header: React.FC = () => {
         <div className="flex items-center gap-3 flex-shrink-0">
           <Link
             to="/organizers/dashboard"
-            className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-cyan-950/60 text-cyan-300 border border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-950 hover:scale-105 transition-all"
+            className="flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-full bg-cyan-950/60 text-cyan-300 border border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-950 transition-all duration-200 active:scale-95 shadow-sm"
           >
             <PlusCircle className="w-3.5 h-3.5" />
             <span className="hidden md:inline">Thêm sự kiện</span>
@@ -81,7 +81,7 @@ export const Header: React.FC = () => {
           {role === 'ADMIN' && (
             <Link
               to="/admin"
-              className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 hover:border-emerald-400 hover:bg-emerald-950 hover:scale-105 transition-all"
+              className="flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-full bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 hover:border-emerald-400 hover:bg-emerald-950 transition-all duration-200 active:scale-95 shadow-sm"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
               <span className="hidden md:inline">Quản trị</span>
@@ -91,14 +91,14 @@ export const Header: React.FC = () => {
           {username ? (
             <div className="flex items-center gap-3 border-l border-slate-800 pl-4">
               <Link to="/profile" className="flex items-center gap-1.5 text-sm font-medium text-slate-200 hover:text-cyan-400 transition-colors">
-                <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400">
-                  <User className="w-3.5 h-3.5" />
+                <div className="w-7 h-7 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 border border-cyan-500/30">
+                  <User className="w-4 h-4" />
                 </div>
                 <span className="hidden sm:inline">{username}</span>
               </Link>
               <button
                 onClick={handleLogout}
-                className="p-1.5 rounded-lg border border-slate-800 hover:bg-slate-900 text-slate-400 hover:text-rose-400 transition-colors"
+                className="p-2 rounded-full border border-slate-800 hover:bg-slate-900 text-slate-400 hover:text-rose-400 transition-all duration-200 active:scale-95"
                 title="Đăng xuất"
               >
                 <LogOut className="w-4 h-4" />
@@ -107,7 +107,7 @@ export const Header: React.FC = () => {
           ) : (
             <Link
               to="/login"
-              className="py-1.5 px-4 rounded-xl border border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-950/30 text-cyan-400 hover:text-cyan-300 font-bold text-xs transition-all"
+              className="py-2 px-5 rounded-full border border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-950/30 text-cyan-400 hover:text-cyan-300 font-bold text-xs transition-all duration-200 active:scale-95 shadow-sm"
             >
               Đăng Nhập
             </Link>

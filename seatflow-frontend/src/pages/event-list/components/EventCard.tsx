@@ -25,25 +25,25 @@ const getCategoryBadgeLabel = (cat: string) => {
 
 export const EventCard: React.FC<IEventCardProps> = ({ event }) => {
   return (
-    <div className="group glass-card rounded-2xl border border-slate-800/80 overflow-hidden hover:border-violet-500/40 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-violet-500/15 glow-purple transition-all duration-300 flex flex-col justify-between bg-slate-950/70 backdrop-blur-md flex-shrink-0 w-full">
+    <div className="group rounded-3xl border border-slate-800/80 overflow-hidden hover:border-violet-500/50 hover:scale-[1.02] hover:shadow-xl hover:shadow-violet-500/10 transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] flex flex-col justify-between bg-slate-900/60 backdrop-blur-md flex-shrink-0 w-full relative">
       <div>
         {/* Banner Area */}
         <div className="relative h-48 w-full overflow-hidden">
           <img
             src={event.bannerUrl}
             alt={event.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-[cubic-bezier(0.2,0,0,1)]"
           />
           {/* Overlay gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80" />
 
-          {/* Status Badge */}
-          <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full backdrop-blur-md border text-[10px] font-bold shadow-lg ${
+          {/* Status Pill Badge */}
+          <div className={`absolute top-3 right-3 px-3 py-1 rounded-full backdrop-blur-md border text-[10px] font-bold shadow-sm ${
             event.availableSeats === 0 
-              ? 'bg-rose-950/80 border-rose-500/30 text-rose-400'
+              ? 'bg-rose-950/80 border-rose-500/30 text-rose-300'
               : event.availableSeats <= 10
-              ? 'bg-amber-950/80 border-amber-500/30 text-amber-400'
-              : 'bg-emerald-950/80 border-emerald-500/30 text-emerald-400'
+              ? 'bg-amber-950/80 border-amber-500/30 text-amber-300'
+              : 'bg-emerald-950/80 border-emerald-500/30 text-emerald-300'
           }`}>
             {event.availableSeats === 0 
               ? 'Hết Vé' 
@@ -52,30 +52,30 @@ export const EventCard: React.FC<IEventCardProps> = ({ event }) => {
               : 'Đang Mở Bán'}
           </div>
 
-          {/* Hot Badge */}
+          {/* Hot Pill Badge */}
           {event.isHot && (
-            <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-rose-600/90 text-[10px] font-bold text-white flex items-center gap-1 shadow-lg shadow-rose-600/30 animate-pulse">
-              <Flame className="w-3.5 h-3.5 fill-white" />
+            <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-[10px] font-extrabold text-amber-300 flex items-center gap-1.5 shadow-sm animate-pulse">
+              <Flame className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
               <span>TIÊU ĐIỂM</span>
             </div>
           )}
 
-          {/* Category Badge */}
-          <div className="absolute bottom-3 left-3 px-2.5 py-1 rounded-md bg-slate-900/90 backdrop-blur-md border border-slate-700/60 text-[10px] font-bold text-slate-300">
+          {/* Category Pill Badge */}
+          <div className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-slate-950/80 backdrop-blur-md border border-slate-700/60 text-[10px] font-bold text-slate-300">
             {getCategoryBadgeLabel(event.category)}
           </div>
         </div>
 
         {/* Content Area */}
-        <div className="p-5">
-          <h3 className="text-base font-bold text-white mb-2 group-hover:text-violet-400 transition-colors line-clamp-1 leading-snug">
+        <div className="p-6">
+          <h3 className="text-base font-bold text-white mb-2 group-hover:text-violet-300 transition-colors line-clamp-1 leading-snug">
             {event.title}
           </h3>
           <p className="text-slate-400 text-xs line-clamp-2 mb-4 leading-relaxed min-h-[32px]">
             {event.description}
           </p>
 
-          <div className="space-y-2.5 text-xs text-slate-300 border-t border-slate-900 pt-3">
+          <div className="space-y-2.5 text-xs text-slate-300 border-t border-slate-800/80 pt-4">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-violet-400 flex-shrink-0" />
               <span>{new Date(event.eventDate).toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
@@ -89,7 +89,7 @@ export const EventCard: React.FC<IEventCardProps> = ({ event }) => {
                 <span className="text-slate-500">Tổ chức:</span>
                 <Link
                   to={`/organizers/${event.organizerId}`}
-                  className="text-violet-400 hover:text-violet-300 hover:underline truncate"
+                  className="text-violet-400 hover:text-violet-300 hover:underline truncate font-medium"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {event.organizerName}
@@ -97,25 +97,24 @@ export const EventCard: React.FC<IEventCardProps> = ({ event }) => {
               </div>
             )}
           </div>
-
-          <div className="mt-4 flex items-center justify-between border-t border-slate-900 pt-3">
-            <span className="text-[10px] text-slate-500 uppercase font-semibold tracking-wider">Giá vé từ</span>
-            <div className="text-sm font-black text-transparent bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text">
-              {event.minPrice === event.maxPrice
-                ? formatPrice(event.minPrice)
-                : `${formatPrice(event.minPrice)}`}
-            </div>
-          </div>
         </div>
       </div>
 
-      <div className="p-5 pt-0">
+      {/* Footer Area - Pill CTA Button with tactile active:scale-95 */}
+      <div className="px-6 pb-6 pt-2 border-t border-slate-800/40 flex items-center justify-between">
+        <div>
+          <span className="text-[10px] text-slate-400 block font-medium">Giá vé từ</span>
+          <span className="text-sm font-black text-transparent bg-gradient-to-r from-amber-300 to-orange-400 bg-clip-text">
+            {formatPrice(event.minPrice)}
+          </span>
+        </div>
+
         <Link
           to={`/events/${event.id}`}
-          className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-violet-600/15 hover:shadow-violet-600/30 transition-all duration-300 shimmer-btn"
+          className="px-4 py-2 rounded-full bg-violet-600/90 hover:bg-violet-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm hover:shadow-md transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] active:scale-95"
         >
-          <span>Đặt Vé Ngay</span>
-          <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+          <span>Xem Chi Tiết</span>
+          <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </div>
     </div>

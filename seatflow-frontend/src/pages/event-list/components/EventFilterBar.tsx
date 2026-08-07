@@ -39,20 +39,21 @@ export const EventFilterBar: React.FC<IEventFilterBarProps> = ({
   organizerId, onOrganizerIdChange, organizers,
   hasActiveFilters, onResetFilters,
 }) => {
-  const selectClass = 'bg-slate-900 border border-slate-800 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/30 rounded-xl py-2.5 px-3 text-xs text-slate-100 outline-none transition-all';
+  // Material 3 Filled Input style: Rounded top 12px, square bottom, 2px bottom border
+  const selectClass = 'bg-slate-900/90 border-b-2 border-b-slate-700 border-x-0 border-t-0 rounded-t-xl focus:border-b-violet-500 py-2.5 px-3 text-xs text-slate-100 outline-none transition-all duration-200';
 
   return (
-    <div className="glass-card border border-slate-800 rounded-2xl p-4 mb-8 bg-slate-950">
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 flex-1">
+    <div className="rounded-3xl border border-slate-800/80 p-5 mb-8 bg-slate-900/50 backdrop-blur-md shadow-sm">
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
           <div className="relative lg:col-span-1">
-            <Search className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
+            <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
             <input
               type="text"
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Tìm kiếm sự kiện..."
-              className="w-full bg-slate-900 border border-slate-800 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/30 rounded-xl py-2.5 pl-10 pr-4 text-xs text-slate-100 placeholder-slate-600 outline-none transition-all"
+              className="w-full bg-slate-900/90 border-b-2 border-b-slate-700 border-x-0 border-t-0 focus:border-b-violet-500 rounded-t-xl py-2.5 pl-10 pr-4 text-xs text-slate-100 placeholder-slate-500 outline-none transition-all duration-200"
             />
           </div>
 
@@ -81,7 +82,7 @@ export const EventFilterBar: React.FC<IEventFilterBarProps> = ({
           <button
             type="button"
             onClick={onResetFilters}
-            className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 text-xs font-semibold transition-all whitespace-nowrap"
+            className="flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-full border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-bold transition-all duration-200 active:scale-95 whitespace-nowrap shadow-sm"
           >
             <span>Bỏ bộ lọc</span>
           </button>

@@ -60,9 +60,13 @@ export const EventListPage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       
-      {/* Immersive Spotlight Hero Banner */}
+      {/* Immersive Spotlight Hero Banner (MD3 Organic 48px Container & Atmospheric Blurs) */}
       {featuredEvent ? (
-        <div className="relative mb-12 p-6 sm:p-10 rounded-3xl border border-slate-800/85 overflow-hidden bg-slate-950/60 backdrop-blur-md animate-fade-in-up flex flex-col md:flex-row items-center justify-between gap-8 min-h-[340px] shadow-2xl shadow-violet-500/5">
+        <div className="relative mb-12 p-8 sm:p-12 rounded-[48px] border border-slate-800/80 overflow-hidden bg-slate-900/60 backdrop-blur-md animate-fade-in-up flex flex-col md:flex-row items-center justify-between gap-8 min-h-[360px] shadow-xl shadow-violet-500/5">
+          {/* Layered Organic Atmospheric Blurs (MD3 Signature) */}
+          <div className="absolute -top-12 -left-12 w-96 h-96 bg-violet-600/15 rounded-full blur-3xl -z-10 pointer-events-none" />
+          <div className="absolute -bottom-16 right-1/4 w-80 h-80 bg-indigo-600/15 rounded-full blur-3xl -z-10 pointer-events-none" />
+
           {/* Cover gradient overlay */}
           <div 
             className="absolute right-0 top-0 h-full w-full md:w-2/3 bg-cover bg-center opacity-25 md:opacity-40 -z-10 pointer-events-none transition-all duration-700"
@@ -72,10 +76,9 @@ export const EventListPage: React.FC = () => {
               WebkitMaskImage: 'linear-gradient(to left, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%)'
             }} 
           />
-          <div className="absolute top-0 left-0 w-96 h-96 bg-violet-500/5 rounded-full blur-3xl -z-10 pointer-events-none" />
 
           <div className="max-w-xl space-y-4 text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/35 text-amber-300 text-[10px] font-black uppercase tracking-wider animate-pulse">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-extrabold uppercase tracking-wider animate-pulse shadow-sm">
               <Flame className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
               <span>Sự Kiện Tiêu Điểm</span>
             </div>
@@ -87,11 +90,11 @@ export const EventListPage: React.FC = () => {
             </p>
             
             <div className="flex flex-wrap gap-3 text-xs text-slate-300 pt-2">
-              <div className="flex items-center gap-1.5 bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800 text-[11px]">
+              <div className="flex items-center gap-2 bg-slate-950/80 px-3.5 py-1.5 rounded-full border border-slate-800 text-[11px]">
                 <Calendar className="w-3.5 h-3.5 text-violet-400" />
                 <span>{new Date(featuredEvent.eventDate).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
               </div>
-              <div className="flex items-center gap-1.5 bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800 text-[11px]">
+              <div className="flex items-center gap-2 bg-slate-950/80 px-3.5 py-1.5 rounded-full border border-slate-800 text-[11px]">
                 <MapPin className="w-3.5 h-3.5 text-violet-400" />
                 <span className="truncate max-w-[150px]">{featuredEvent.location}</span>
               </div>
@@ -100,19 +103,19 @@ export const EventListPage: React.FC = () => {
             <div className="pt-4 flex items-center gap-5">
               <Link
                 to={`/events/${featuredEvent.id}`}
-                className="px-6 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-extrabold text-xs flex items-center gap-2 shadow-lg shadow-violet-600/15 hover:shadow-violet-600/30 transition-all duration-300 transform active:scale-98 shimmer-btn"
+                className="px-7 py-3.5 rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-extrabold text-xs flex items-center gap-2 shadow-lg shadow-violet-600/20 transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] active:scale-95"
               >
                 <span>Đặt Vé Ngay</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <div className="text-xs text-slate-400">
-                Vé chỉ từ <span className="text-sm font-black text-transparent bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text">{formatPrice(featuredEvent.minPrice)}</span>
+                Vé chỉ từ <span className="text-base font-black text-transparent bg-gradient-to-r from-amber-300 to-orange-400 bg-clip-text">{formatPrice(featuredEvent.minPrice)}</span>
               </div>
             </div>
           </div>
 
-          {/* Event Card preview container on large screens - with 3D Float animation */}
-          <div className="hidden lg:block w-80 h-48 rounded-2xl overflow-hidden border border-slate-800/85 shadow-2xl relative transition-transform duration-500 flex-shrink-0 animate-float">
+          {/* Event Card preview container on large screens - with MD3 32px Radius */}
+          <div className="hidden lg:block w-80 h-52 rounded-[32px] overflow-hidden border border-slate-800/85 shadow-2xl relative transition-transform duration-500 flex-shrink-0 animate-float">
             <img src={featuredEvent.bannerUrl} alt="" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-slate-950/20" />
           </div>
