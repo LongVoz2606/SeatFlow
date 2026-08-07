@@ -202,10 +202,12 @@ export const EventListPage: React.FC = () => {
         </div>
       )}
 
+      <HotEventsSection />
+
       {/* Quick Category Navigation Icons */}
-      <div className="mb-12 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-        <h3 className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-4">Tìm kiếm nhanh theo thể loại</h3>
-        <div className="flex flex-wrap gap-3 sm:gap-4">
+      <div className="mb-6 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+        <h3 className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-3">Tìm kiếm nhanh theo thể loại</h3>
+        <div className="flex flex-wrap gap-2.5 sm:gap-3">
           {CATEGORIES.map((cat) => {
             const Icon = cat.icon;
             const isActive = selectedCategory === cat.key;
@@ -213,21 +215,19 @@ export const EventListPage: React.FC = () => {
               <button
                 key={cat.key}
                 onClick={() => setSelectedCategory(isActive ? null : cat.key)}
-                className={`flex items-center gap-2.5 px-4.5 py-3 rounded-xl border text-xs font-bold transition-all duration-305 ${
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all duration-300 ${
                   isActive
                     ? 'bg-gradient-to-r from-violet-500/20 to-indigo-500/20 border-violet-500 text-violet-300 shadow-lg shadow-violet-500/15 scale-98 glow-purple'
                     : 'border-slate-800 bg-slate-950/40 text-slate-400 hover:border-slate-700 hover:text-slate-200 hover:bg-slate-950/60'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-violet-400' : 'text-slate-400'}`} />
+                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-violet-400' : 'text-slate-400'}`} />
                 <span>{cat.label}</span>
               </button>
             );
           })}
         </div>
       </div>
-
-      <HotEventsSection />
 
       <EventFilterBar
         search={searchInput}
