@@ -84,6 +84,17 @@ export const Header: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* TicketBox-style Sub Navigation Bar for Categories */}
+      <div className="border-t border-slate-800/80 bg-slate-950/90 text-xs font-semibold text-slate-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-6 overflow-x-auto h-10 scrollbar-none whitespace-nowrap">
+          <Link to="/" className="hover:text-cyan-400 transition-colors py-1">Ca Nhạc</Link>
+          <Link to="/" className="hover:text-cyan-400 transition-colors py-1">Sân Khấu & Nghệ Thuật</Link>
+          <Link to="/" className="hover:text-cyan-400 transition-colors py-1">Thể Thao</Link>
+          <Link to="/" className="hover:text-cyan-400 transition-colors py-1">Hội Thảo & Công Nghệ</Link>
+          <Link to="/" className="hover:text-cyan-400 transition-colors py-1">Lễ Hội & Giải Trí</Link>
+        </div>
+      </div>
     </header>
   );
 };
