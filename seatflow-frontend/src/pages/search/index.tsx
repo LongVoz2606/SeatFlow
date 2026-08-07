@@ -33,6 +33,8 @@ export const SearchEventsPage: React.FC = () => {
   const [priceRangeKey, setPriceRangeKey] = useState(initialPrice);
   const [organizerId, setOrganizerId] = useState(initialOrganizer);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(initialCategory || null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const ITEMS_PER_PAGE = 6;
 
   // Sync state with URL params changes
   useEffect(() => {
@@ -41,6 +43,8 @@ export const SearchEventsPage: React.FC = () => {
     setLocation(searchParams.get('location') || '');
     setPriceRangeKey(searchParams.get('price') || '');
     setOrganizerId(searchParams.get('organizerId') || '');
+    const p = Number(searchParams.get('page')) || 1;
+    setCurrentPage(p);
   }, [searchParams]);
 
   useEffect(() => {
@@ -63,27 +67,38 @@ export const SearchEventsPage: React.FC = () => {
 
   const handleSearchChange = (val: string) => {
     setSearchInput(val);
-    updateUrlParams({ q: val || null });
+    setCurrentPage(1);
+    updateUrlParams({ q: val || null, page: null });
   };
 
   const handleLocationChange = (val: string) => {
     setLocation(val);
-    updateUrlParams({ location: val || null });
+    setCurrentPage(1);
+    updateUrlParams({ location: val || null, page: null });
   };
 
   const handlePriceChange = (val: string) => {
     setPriceRangeKey(val);
-    updateUrlParams({ price: val || null });
+    setCurrentPage(1);
+    updateUrlParams({ price: val || null, page: null });
   };
 
   const handleOrganizerChange = (val: string) => {
     setOrganizerId(val);
-    updateUrlParams({ organizerId: val || null });
+    setCurrentPage(1);
+    updateUrlParams({ organizerId: val || null, page: null });
   };
 
   const handleCategorySelect = (catKey: string | null) => {
     setSelectedCategory(catKey);
-    updateUrlParams({ category: catKey || null });
+    setCurrentPage(1);
+    updateUrlParams({ category: catKey || null, page: null });
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    updateUrlParams({ page: page > 1 ? String(page) : null });
+    window.scrollTo({ top: 200, behavior: 'smooth' });
   };
 
   const handleResetFilters = () => {
@@ -93,6 +108,7 @@ export const SearchEventsPage: React.FC = () => {
     setPriceRangeKey('');
     setOrganizerId('');
     setSelectedCategory(null);
+    setCurrentPage(1);
     setSearchParams({});
   };
 
@@ -144,6 +160,13 @@ export const SearchEventsPage: React.FC = () => {
     return events.filter(e => e.category === selectedCategory);
   }, [events, selectedCategory]);
 
+  const totalPages = Math.ceil(filteredEvents.length / ITEMS_PER_PAGE);
+
+  const paginatedEvents = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredEvents.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredEvents, currentPage]);
+
   const hasActiveFilters = !!(searchInput || location || priceRangeKey || organizerId || selectedCategory);
 
   const CATEGORIES = [
@@ -158,7 +181,7 @@ export const SearchEventsPage: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Page Header */}
       <div className="mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/30 text-cyan-300 text-xs font-semibold mb-3">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-purple-950/80 border border-purple-500/30 text-purple-300 text-xs font-semibold mb-3 shadow-sm">
           <Filter className="w-3.5 h-3.5" />
           <span>Hệ Thống Tìm Kiếm Sự Kiện</span>
         </div>
@@ -222,27 +245,33 @@ export const SearchEventsPage: React.FC = () => {
       <div className="mt-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
-            <Ticket className="w-5 h-5 text-cyan-400" />
+            <Ticket className="w-5 h-5 text-purple-400" />
             <span>Danh sách sự kiện ({filteredEvents.length})</span>
             {selectedCategory && (
-              <span className="text-xs bg-cyan-950 text-cyan-300 border border-cyan-500/30 px-2.5 py-0.5 rounded-full font-normal">
+              <span className="text-xs bg-purple-950/80 text-purple-300 border border-purple-500/30 px-3 py-0.5 rounded-full font-medium">
                 {getCategoryTitle(selectedCategory)}
               </span>
             )}
           </h2>
+
+          {totalPages > 1 && (
+            <span className="text-xs text-purple-300/70 font-medium">
+              Trang <strong className="text-white">{currentPage}</strong> / {totalPages}
+            </span>
+          )}
         </div>
 
         {error ? (
-          <div className="p-6 glass-card border border-rose-500/30 rounded-2xl text-center bg-slate-950">
+          <div className="p-6 border border-rose-500/30 rounded-3xl text-center bg-slate-900/50 backdrop-blur-md">
             <p className="text-rose-400 font-semibold mb-2">Không thể tải danh sách sự kiện.</p>
             <p className="text-xs text-slate-400">Vui lòng thử lại sau ít phút.</p>
           </div>
         ) : isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="rounded-2xl border border-slate-800 overflow-hidden bg-slate-950">
+              <div key={i} className="rounded-3xl border border-slate-800 overflow-hidden bg-slate-900/40">
                 <div className="h-48 w-full animate-shimmer" />
-                <div className="p-5 space-y-3">
+                <div className="p-6 space-y-3">
                   <div className="h-4 w-3/4 rounded animate-shimmer" />
                   <div className="h-3 w-full rounded animate-shimmer" />
                   <div className="h-3 w-2/3 rounded animate-shimmer" />
@@ -251,25 +280,68 @@ export const SearchEventsPage: React.FC = () => {
             ))}
           </div>
         ) : filteredEvents.length === 0 ? (
-          <div className="text-center py-20 bg-slate-900/30 border border-slate-800/80 rounded-2xl p-8">
+          <div className="text-center py-20 bg-slate-900/30 border border-slate-800/80 rounded-3xl p-8">
             <Sparkles className="w-10 h-10 text-slate-600 mx-auto mb-3" />
             <p className="text-slate-300 font-bold text-base mb-1">Không tìm thấy sự kiện nào phù hợp</p>
             <p className="text-slate-500 text-xs mb-4">Hãy thử điều chỉnh từ khóa tìm kiếm hoặc bỏ chọn các bộ lọc.</p>
             <button
               onClick={handleResetFilters}
-              className="px-4 py-2 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 text-xs font-bold transition-all"
+              className="px-5 py-2.5 rounded-full bg-purple-600/20 border border-purple-500/30 text-purple-300 hover:bg-purple-600/30 text-xs font-bold transition-all duration-200 active:scale-95 shadow-sm"
             >
               Bỏ bộ lọc tìm kiếm
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredEvents.map((event, index) => (
-              <div key={event.id} className="animate-fade-in-up" style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}>
-                <EventCard event={event} />
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginatedEvents.map((event, index) => (
+                <div key={event.id} className="animate-fade-in-up" style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}>
+                  <EventCard event={event} />
+                </div>
+              ))}
+            </div>
+
+            {/* Material You MD3 Pill-shaped Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="mt-12 flex items-center justify-center gap-2 pt-6 border-t border-purple-900/20">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 rounded-full border border-purple-500/20 bg-purple-950/40 text-purple-200 hover:text-white hover:bg-purple-600/30 text-xs font-bold transition-all duration-200 active:scale-95 disabled:opacity-40 disabled:pointer-events-none disabled:active:scale-100 shadow-sm"
+                >
+                  Trang trước
+                </button>
+
+                <div className="flex items-center gap-1.5 px-2">
+                  {Array.from({ length: totalPages }).map((_, idx) => {
+                    const pageNum = idx + 1;
+                    const isActive = pageNum === currentPage;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`w-9 h-9 rounded-full text-xs font-extrabold transition-all duration-200 active:scale-95 flex items-center justify-center shadow-sm ${
+                          isActive
+                            ? 'bg-purple-600 border border-purple-500 text-white shadow-purple-500/20 scale-105'
+                            : 'border border-slate-800/80 bg-slate-900/60 text-slate-400 hover:border-slate-700 hover:text-slate-200'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 rounded-full border border-purple-500/20 bg-purple-950/40 text-purple-200 hover:text-white hover:bg-purple-600/30 text-xs font-bold transition-all duration-200 active:scale-95 disabled:opacity-40 disabled:pointer-events-none disabled:active:scale-100 shadow-sm"
+                >
+                  Trang sau
+                </button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
     </div>
