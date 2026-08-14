@@ -32,7 +32,7 @@ public class BookingController {
             HttpServletRequest httpRequest) {
         Long userId = (Long) httpRequest.getAttribute("userId");
         BookingDtos.BookingResponse response = bookingService.holdSeats(request, userId);
-        return ResponseEntity.ok(ApiResponse.ok(response, "Giữ ghế thành công! Vui lòng xác nhận trong " + 5 + " phút."));
+        return ResponseEntity.ok(ApiResponse.ok(response, "Giữ ghế thành công! Vui lòng xác nhận trong " + 15 + " phút."));
     }
 
     @PostMapping("/confirm")

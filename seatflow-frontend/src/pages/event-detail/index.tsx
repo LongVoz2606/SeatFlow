@@ -201,7 +201,7 @@ export const EventDetailPage: React.FC = () => {
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>Giữ ghế & Thanh toán (5 phút)</span>
+                  <span>Giữ ghế & Thanh toán (15 phút)</span>
                 </>
               )}
             </button>
