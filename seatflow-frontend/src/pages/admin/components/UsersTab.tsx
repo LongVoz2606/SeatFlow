@@ -41,7 +41,16 @@ export const UsersTab: React.FC = () => {
           {data?.content.map((user) => (
             <div key={user.id} className="glass-card border border-slate-800 rounded-2xl p-4 flex items-center justify-between gap-4 bg-slate-950">
               <div>
-                <h4 className="font-bold text-white text-sm">{user.username} <span className="text-slate-500 font-normal">({user.role})</span></h4>
+                <h4 className="font-bold text-white text-sm flex items-center gap-2">
+                  {user.username} <span className="text-slate-500 font-normal">({user.role})</span>
+                  <span className={`px-2 py-0.5 text-[9px] rounded-full font-bold uppercase border ${
+                    user.provider === 'LOCAL'
+                      ? 'bg-slate-800 text-slate-300 border-slate-700'
+                      : 'bg-cyan-950 text-cyan-300 border-cyan-500/30'
+                  }`}>
+                    {user.provider === 'LOCAL' ? 'SeatFlow' : user.provider}
+                  </span>
+                </h4>
                 <p className="text-xs text-slate-400">{user.email} {user.fullName && `• ${user.fullName}`}</p>
               </div>
               <button

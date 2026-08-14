@@ -29,13 +29,15 @@ public class UserController {
     public ResponseEntity<ApiResponse<UserProfileEntity>> getMyProfile(HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         String username = (String) request.getAttribute("username");
+        String email = (String) request.getAttribute("email");
+        String fullName = (String) request.getAttribute("fullName");
 
         if (userId == null) {
             return ResponseEntity.status(401)
                     .body(ApiResponse.error("UNAUTHORIZED", "Bạn chưa đăng nhập."));
         }
 
-        UserProfileEntity profile = userService.getProfileByUserId(userId, username, null);
+        UserProfileEntity profile = userService.getProfileByUserId(userId, username, email, fullName);
         return ResponseEntity.ok(ApiResponse.ok(profile));
     }
 
@@ -62,7 +64,7 @@ public class UserController {
     @GetMapping("/{id}")
     @Operation(summary = "Lấy hồ sơ theo ID người dùng")
     public ResponseEntity<ApiResponse<UserProfileEntity>> getProfileById(@PathVariable Long id) {
-        UserProfileEntity profile = userService.getProfileByUserId(id, null, null);
+        UserProfileEntity profile = userService.getProfileByUserId(id, null, null, null);
         return ResponseEntity.ok(ApiResponse.ok(profile));
     }
 }

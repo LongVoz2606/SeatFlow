@@ -63,7 +63,8 @@ public class AuthDtos {
             String username,
             String email,
             String fullName,
-            String role
+            String role,
+            String provider
     ) {}
 
     public record AdminUserResponse(
@@ -73,7 +74,8 @@ public class AuthDtos {
             String fullName,
             String role,
             boolean enabled,
-            java.time.ZonedDateTime createdAt
+            java.time.ZonedDateTime createdAt,
+            String provider
     ) {}
 
     public record UpdateUserStatusRequest(

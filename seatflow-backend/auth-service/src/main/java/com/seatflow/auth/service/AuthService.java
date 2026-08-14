@@ -2,6 +2,7 @@ package com.seatflow.auth.service;
 
 import com.seatflow.auth.client.UserServiceClient;
 import com.seatflow.auth.dto.AuthDtos;
+import com.seatflow.auth.entity.AuthProvider;
 import com.seatflow.auth.entity.AuthRole;
 import com.seatflow.auth.entity.AuthUserEntity;
 import com.seatflow.auth.notification.EmailSender;
@@ -74,7 +75,7 @@ public class AuthService {
         log.info("New user registered: {}", saved.getUsername());
 
         String token = jwtTokenProvider.generateAccessToken(
-                saved.getId(), saved.getUsername(), saved.getRole().name()
+                saved.getId(), saved.getUsername(), saved.getRole().name(), saved.getEmail(), saved.getFullName()
         );
         return AuthDtos.TokenResponse.of(token, accessTokenExpirySeconds, saved.getId(), saved.getUsername(), saved.getRole().name());
     }
@@ -94,7 +95,7 @@ public class AuthService {
         }
 
         String token = jwtTokenProvider.generateAccessToken(
-                user.getId(), user.getUsername(), user.getRole().name()
+                user.getId(), user.getUsername(), user.getRole().name(), user.getEmail(), user.getFullName()
         );
         log.info("User logged in: {}", user.getUsername());
         return AuthDtos.TokenResponse.of(token, accessTokenExpirySeconds, user.getId(), user.getUsername(), user.getRole().name());
@@ -109,7 +110,8 @@ public class AuthService {
                 user.getUsername(),
                 user.getEmail(),
                 user.getFullName(),
-                user.getRole().name()
+                user.getRole().name(),
+                user.getProvider().name()
         );
     }
 
@@ -123,7 +125,7 @@ public class AuthService {
         List<AuthDtos.AdminUserResponse> content = result.getContent().stream()
                 .map(u -> new AuthDtos.AdminUserResponse(
                         u.getId(), u.getUsername(), u.getEmail(), u.getFullName(),
-                        u.getRole().name(), u.isEnabled(), u.getCreatedAt()))
+                        u.getRole().name(), u.isEnabled(), u.getCreatedAt(), u.getProvider().name()))
                 .toList();
         return PageResponse.of(content, page, size, result.getTotalElements());
     }
@@ -159,7 +161,7 @@ public class AuthService {
             throw new UnauthorizedException("Google ID token không thuộc về ứng dụng này.");
         }
 
-        return loginOrRegisterOAuth(info.email(), info.name());
+        return loginOrRegisterOAuth(info.email(), info.name(), AuthProvider.GOOGLE);
     }
 
     /**
@@ -181,10 +183,10 @@ public class AuthService {
             throw new BusinessException("FACEBOOK_EMAIL_REQUIRED", "Tài khoản Facebook của bạn chưa xác thực email. Vui lòng cấp quyền email để đăng nhập.");
         }
 
-        return loginOrRegisterOAuth(profile.email(), profile.name());
+        return loginOrRegisterOAuth(profile.email(), profile.name(), AuthProvider.FACEBOOK);
     }
 
-    private AuthDtos.TokenResponse loginOrRegisterOAuth(String email, String displayName) {
+    private AuthDtos.TokenResponse loginOrRegisterOAuth(String email, String displayName, AuthProvider provider) {
         AuthUserEntity user = authUserRepository.findByEmail(email).orElseGet(() -> {
             String baseUsername = email.substring(0, email.indexOf('@'));
             String username = baseUsername;
@@ -197,6 +199,7 @@ public class AuthService {
                     .passwordHash(passwordEncoder.encode(UUID.randomUUID().toString()))
                     .fullName(displayName)
                     .role(AuthRole.USER)
+                    .provider(provider)
                     .build();
             AuthUserEntity saved = authUserRepository.save(created);
             log.info("New user auto-provisioned via OAuth: {}", saved.getUsername());
@@ -207,7 +210,9 @@ public class AuthService {
             throw new UnauthorizedException("Tài khoản của bạn đã bị vô hiệu hóa.");
         }
 
-        String token = jwtTokenProvider.generateAccessToken(user.getId(), user.getUsername(), user.getRole().name());
+        String token = jwtTokenProvider.generateAccessToken(
+                user.getId(), user.getUsername(), user.getRole().name(), user.getEmail(), user.getFullName()
+        );
         log.info("User logged in via OAuth: {}", user.getUsername());
         return AuthDtos.TokenResponse.of(token, accessTokenExpirySeconds, user.getId(), user.getUsername(), user.getRole().name());
     }

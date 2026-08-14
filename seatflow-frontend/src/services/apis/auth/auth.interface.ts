@@ -25,6 +25,7 @@ export interface IUserInfoResponse {
   email: string;
   fullName: string;
   role: string;
+  provider: string;
 }
 
 export interface IAdminUser {
@@ -35,6 +36,7 @@ export interface IAdminUser {
   role: string;
   enabled: boolean;
   createdAt: string;
+  provider: string;
 }
 
 export interface IAdminUserQuery {
