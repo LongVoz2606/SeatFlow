@@ -30,11 +30,17 @@ public interface EventServiceClient {
             int totalSeats,
             int availableSeats,
             String status,
+            Long organizerId,
             List<SeatResponse> seats
     ) {}
 
+    record OrganizerLookupResponse(Long id, Long authUserId, String organizationName, String status) {}
+
     @org.springframework.web.bind.annotation.GetMapping("/api/events/{id}")
     ApiResponse<EventDetailResponse> getEventDetail(@PathVariable("id") Long id);
+
+    @org.springframework.web.bind.annotation.GetMapping("/api/organizers/internal/by-auth-user/{authUserId}")
+    ApiResponse<OrganizerLookupResponse> getOrganizerByAuthUserId(@PathVariable("authUserId") Long authUserId);
 
     @PostMapping("/api/events/{eventId}/seats/hold")
     ApiResponse<HoldSeatsResponse> holdSeats(

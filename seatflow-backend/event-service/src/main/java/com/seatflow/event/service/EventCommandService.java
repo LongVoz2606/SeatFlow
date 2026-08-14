@@ -76,7 +76,7 @@ public class EventCommandService {
                 .category(request.category() != null ? request.category() : "Music")
                 .totalSeats(totalSeats)
                 .availableSeats(totalSeats)
-                .status("ACTIVE")
+                .status("PENDING")
                 .organizerId(organizer.getId())
                 .isHot(false)
                 .minPrice(minPrice != null ? minPrice : BigDecimal.ZERO)
@@ -100,6 +100,32 @@ public class EventCommandService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sự kiện ID: " + eventId));
         event.setIsHot(hot);
         eventRepository.save(event);
+    }
+
+    /**
+     * Admin duyệt sự kiện đang chờ (PENDING) để công khai (ACTIVE).
+     */
+    @Transactional
+    public void approveEvent(Long eventId) {
+        EventEntity event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sự kiện ID: " + eventId));
+        event.setStatus("ACTIVE");
+        event.setRejectionReason(null);
+        eventRepository.save(event);
+        log.info("Event {} approved", eventId);
+    }
+
+    /**
+     * Admin từ chối sự kiện đang chờ duyệt.
+     */
+    @Transactional
+    public void rejectEvent(Long eventId, String reason) {
+        EventEntity event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sự kiện ID: " + eventId));
+        event.setStatus("REJECTED");
+        event.setRejectionReason(reason);
+        eventRepository.save(event);
+        log.info("Event {} rejected: {}", eventId, reason);
     }
 
     /**
