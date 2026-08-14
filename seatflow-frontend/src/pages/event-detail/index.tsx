@@ -82,6 +82,22 @@ export const EventDetailPage: React.FC = () => {
 
   const totalAmount = selectedSeats.reduce((acc, curr) => acc + curr.price, 0);
 
+  // Sự kiện tạo trước khi có Zone Builder không có `zones` — suy ra loại vé/giá trực tiếp từ danh sách ghế.
+  const derivedTicketTypes = React.useMemo(() => {
+    if (!event?.seats || event.seats.length === 0) return [];
+    const map = new Map<string, { seatType: string; price: number; count: number }>();
+    event.seats.forEach((s) => {
+      const existing = map.get(s.seatType);
+      if (existing) {
+        existing.count += 1;
+        existing.price = Math.min(existing.price, s.price);
+      } else {
+        map.set(s.seatType, { seatType: s.seatType, price: s.price, count: 1 });
+      }
+    });
+    return Array.from(map.values());
+  }, [event]);
+
   if (isLoading) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
@@ -149,29 +165,45 @@ export const EventDetailPage: React.FC = () => {
             </div>
           )}
 
-          {/* Ticket types */}
-          {event.zones && event.zones.length > 0 && (
+          {/* Ticket types: dùng zones nếu có (sự kiện mới), fallback suy từ ghế (sự kiện cũ) */}
+          {(event.zones && event.zones.length > 0) || derivedTicketTypes.length > 0 ? (
             <div className="glass-card p-6 rounded-3xl border border-slate-800 bg-slate-950">
               <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
                 <Ticket className="w-4 h-4 text-cyan-400" />
                 <span>Loại vé & giá</span>
               </h2>
               <div className="space-y-2">
-                {event.zones.map((z) => (
-                  <div key={z.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-900/60 border border-slate-800">
-                    <div className="flex items-center gap-2.5">
-                      <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: z.color || '#06b6d4' }} />
-                      <div>
-                        <p className="text-sm font-bold text-white">{z.name}</p>
-                        <p className="text-[10px] text-slate-500">{z.rowCount * z.colCount} ghế</p>
+                {event.zones && event.zones.length > 0
+                  ? event.zones.map((z) => (
+                      <div key={z.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-900/60 border border-slate-800">
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: z.color || '#06b6d4' }} />
+                          <div>
+                            <p className="text-sm font-bold text-white">{z.name}</p>
+                            <p className="text-[10px] text-slate-500">{z.rowCount * z.colCount} ghế</p>
+                          </div>
+                        </div>
+                        <span className="text-sm font-black text-cyan-400 font-mono">{formatCurrency(z.price)}</span>
                       </div>
-                    </div>
-                    <span className="text-sm font-black text-cyan-400 font-mono">{formatCurrency(z.price)}</span>
-                  </div>
-                ))}
+                    ))
+                  : derivedTicketTypes.map((t) => (
+                      <div key={t.seatType} className="flex items-center justify-between p-3 rounded-xl bg-slate-900/60 border border-slate-800">
+                        <div className="flex items-center gap-2.5">
+                          <span
+                            className="w-3 h-3 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: t.seatType === 'VIP' ? '#a855f7' : '#64748b' }}
+                          />
+                          <div>
+                            <p className="text-sm font-bold text-white">{t.seatType === 'VIP' ? 'VIP' : 'Thường'}</p>
+                            <p className="text-[10px] text-slate-500">{t.count} ghế</p>
+                          </div>
+                        </div>
+                        <span className="text-sm font-black text-cyan-400 font-mono">{formatCurrency(t.price)}</span>
+                      </div>
+                    ))}
               </div>
             </div>
-          )}
+          ) : null}
 
           {isShowMode ? (
             /* Sessions list to pick from */
@@ -322,10 +354,20 @@ export const EventDetailPage: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <>
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Giữ ghế & Thanh toán (15 phút)</span>
-                </>
+                <button
+                  disabled={selectedSeats.length === 0 || holdMutation.isPending}
+                  onClick={() => holdMutation.mutate()}
+                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 transition-all"
+                >
+                  {holdMutation.isPending ? (
+                    <span>Đang giữ ghế...</span>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Giữ ghế & Thanh toán (15 phút)</span>
+                    </>
+                  )}
+                </button>
               )}
             </div>
           )}
