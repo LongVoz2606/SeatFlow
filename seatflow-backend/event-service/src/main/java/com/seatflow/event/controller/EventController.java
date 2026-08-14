@@ -65,7 +65,7 @@ public class EventController {
     @Operation(summary = "Chi tiết sự kiện và sơ đồ ghế")
     public ResponseEntity<ApiResponse<EventDtos.EventDetailResponse>> getEventDetail(
             @PathVariable Long id) {
-        EventDtos.EventDetailResponse detail = eventQueryService.findByIdWithSeatMap(id)
+        EventDtos.EventDetailResponse detail = eventQueryService.findEventDetail(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sự kiện ID: " + id));
         return ResponseEntity.ok(ApiResponse.ok(detail));
     }

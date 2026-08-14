@@ -26,6 +26,16 @@ public class SeatEntity {
     @Column(name = "event_id", nullable = false)
     Long eventId;
 
+    /** NULL cho ghế kiểu cũ (tạo bằng seatSections thẳng hàng, không thuộc zone tùy biến). */
+    @Column(name = "zone_id")
+    Long zoneId;
+
+    @Column(name = "row_index")
+    Integer rowIndex;
+
+    @Column(name = "col_index")
+    Integer colIndex;
+
     @Column(name = "seat_number", nullable = false, length = 20)
     String seatNumber;
 

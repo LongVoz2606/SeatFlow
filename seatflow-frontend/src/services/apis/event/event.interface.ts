@@ -14,19 +14,27 @@ export interface IEventQuery {
   size?: number;
 }
 
-export interface ISeatSectionBody {
-  rowLabel: string;
-  seatCount: number;
+export interface IZoneBody {
+  name: string;
   seatType: string;
   price: number;
+  rowCount: number;
+  colCount: number;
+  rowSpacing: number;
+  colSpacing: number;
+  curveAngle: number;
+  positionX: number;
+  positionY: number;
+  rotation: number;
+  color?: string;
 }
 
 export interface ICreateEventBody {
   title: string;
   description: string;
   location: string;
-  eventDate: string;
   bannerUrl: string;
   category?: string;
-  seatSections: ISeatSectionBody[];
+  sessionDates: string[];
+  zones: IZoneBody[];
 }
