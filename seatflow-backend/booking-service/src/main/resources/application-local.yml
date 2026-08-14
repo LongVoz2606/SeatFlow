@@ -27,7 +27,7 @@ seatflow:
     secret: seatflow-super-secret-key-for-jwt-signing-must-be-at-least-256-bits
     access-token-expiry-ms: 86400000
   booking:
-    hold-duration-minutes: 5
+    hold-duration-minutes: 15
   event-service:
     url: http://localhost:8083
   redisson:

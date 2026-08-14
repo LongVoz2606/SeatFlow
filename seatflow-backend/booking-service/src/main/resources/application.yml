@@ -43,7 +43,7 @@ seatflow:
     secret: ${JWT_SECRET:seatflow-super-secret-key-for-jwt-signing-must-be-at-least-256-bits}
     access-token-expiry-ms: ${JWT_EXPIRY_MS:86400000}
   booking:
-    hold-duration-minutes: ${BOOKING_HOLD_MINUTES:5}
+    hold-duration-minutes: ${BOOKING_HOLD_MINUTES:15}
     max-pending-seats-per-user-event: ${MAX_PENDING_SEATS_PER_USER_EVENT:8}
   event-service:
     url: ${EVENT_SERVICE_URL:http://localhost:8083}

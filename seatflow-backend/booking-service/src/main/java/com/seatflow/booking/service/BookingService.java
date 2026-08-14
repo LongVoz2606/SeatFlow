@@ -45,7 +45,7 @@ public class BookingService {
     final EventServiceClient eventServiceClient;
     final ObjectMapper objectMapper;
 
-    @Value("${seatflow.booking.hold-duration-minutes:5}")
+    @Value("${seatflow.booking.hold-duration-minutes:15}")
     int holdDurationMinutes;
 
     @Value("${seatflow.booking.max-pending-seats-per-user-event:8}")

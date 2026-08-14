@@ -19,7 +19,7 @@
   1. **Distributed Lock (Redisson Redis)**: Lock theo `seat_id` trước khi xử lý giao dịch.
   2. **Optimistic Locking (`@Version`)**: Cờ version trên Entity `Seat` ở DB layer phòng thủ cuối cùng.
   3. **Pessimistic Lock Fallback (`FOR UPDATE`)**: Fallback kiểm tra trực tiếp DB.
-- **Holding TTL (5 phút)**: Tự động giữ ghế, tự nhả về `AVAILABLE` nếu không thanh toán kịp.
+- **Holding TTL (15 phút)**: Tự động giữ ghế, tự nhả về `AVAILABLE` nếu không thanh toán kịp.
 - **Idempotency Key**: Chống double-submit ở API khởi tạo giao dịch (`Idempotency-Key` HTTP Header).
 
 ### 2. Tìm kiếm, Lọc & Sự kiện nổi bật
