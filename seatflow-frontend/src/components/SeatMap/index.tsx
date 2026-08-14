@@ -12,6 +12,8 @@ interface ISeatMapProps {
 
 const SEAT_SIZE = 22;
 
+const formatCurrency = (v: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v);
+
 function seatColorClasses(seat: ISeat, isSelected: boolean): { fill: string; stroke: string; text: string } {
   if (seat.status === 'BOOKED') return { fill: '#0f172a', stroke: '#1e293b', text: '#475569' };
   if (seat.status === 'HELD') return { fill: '#451a03', stroke: '#f59e0b', text: '#fbbf24' };
@@ -100,12 +102,7 @@ const ZonedSeatMap: React.FC<ISeatMapProps> = ({ seats, zones, selectedSeatIds, 
                 onClick={() => !disabled && onToggleSeat(seat)}
                 style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
               >
-                <title>
-                  {`Ghế ${seat.seatNumber} (${seat.seatType}) - ${new Intl.NumberFormat('vi-VN', {
-                    style: 'currency',
-                    currency: 'VND',
-                  }).format(seat.price)}`}
-                </title>
+                <title>{`Ghế ${seat.seatNumber} (${seat.seatType}) - ${formatCurrency(seat.price)}`}</title>
                 <rect
                   x={-SEAT_SIZE / 2}
                   y={-SEAT_SIZE / 2}
@@ -138,7 +135,7 @@ const ZonedSeatMap: React.FC<ISeatMapProps> = ({ seats, zones, selectedSeatIds, 
           <div key={z.id} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-800 text-[11px] text-slate-300">
             <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: z.color || '#06b6d4' }} />
             <span className="font-semibold truncate flex-1">{z.name}</span>
-            <span className="text-cyan-300 font-mono">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(z.price)}</span>
+            <span className="text-cyan-300 font-mono">{formatCurrency(z.price)}</span>
           </div>
         ))}
       </div>
@@ -159,12 +156,36 @@ const LegacyGridSeatMap: React.FC<Omit<ISeatMapProps, 'zones'>> = ({ seats, sele
     return Object.entries(map).sort(([a], [b]) => a.localeCompare(b));
   }, [seats]);
 
+  const priceByType = React.useMemo(() => {
+    const map = new Map<string, number>();
+    seats.forEach((s) => {
+      const current = map.get(s.seatType);
+      map.set(s.seatType, current == null ? s.price : Math.min(current, s.price));
+    });
+    return Array.from(map.entries());
+  }, [seats]);
+
   return (
     <div className="w-full flex flex-col items-center">
-      <div className="w-full max-w-xl mb-10 text-center">
+      <div className="w-full max-w-xl mb-6 text-center">
         <div className="h-2 w-full bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 rounded-full shadow-[0_0_20px_rgba(6,182,212,0.6)] mb-2" />
         <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">STAGE / SÂN KHẤU</span>
       </div>
+
+      {/* Loại ghế & giá — hiện sẵn, không cần chọn ghế mới thấy */}
+      {priceByType.length > 0 && (
+        <div className="w-full max-w-xl grid grid-cols-2 gap-2 mb-8">
+          {priceByType.map(([type, price]) => (
+            <div key={type} className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-800 text-[11px] text-slate-300">
+              <span className="flex items-center gap-2">
+                <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${type === 'VIP' ? 'bg-purple-500' : 'bg-slate-500'}`} />
+                <span className="font-semibold">{type === 'VIP' ? 'VIP' : 'Thường'}</span>
+              </span>
+              <span className="text-cyan-300 font-mono">{formatCurrency(price)}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="space-y-4 max-w-full overflow-x-auto pb-4">
         {rows.map(([rowName, rowSeats]) => (
@@ -197,7 +218,7 @@ const LegacyGridSeatMap: React.FC<Omit<ISeatMapProps, 'zones'>> = ({ seats, sele
                     disabled={!isAvailable || isBooked || isHeld}
                     onClick={() => onToggleSeat(seat)}
                     className={`w-9 h-9 rounded-lg text-xs font-semibold flex items-center justify-center transition-all duration-200 ${bgClass}`}
-                    title={`Ghế ${seat.seatNumber} (${seat.seatType}) - ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(seat.price)}`}
+                    title={`Ghế ${seat.seatNumber} (${seat.seatType}) - ${formatCurrency(seat.price)}`}
                   >
                     {isSelected ? <Check className="w-4 h-4 stroke-[3]" /> : seat.seatNumber}
                   </button>
