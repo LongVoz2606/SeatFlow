@@ -6,6 +6,7 @@ import com.seatflow.common.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -16,6 +17,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -27,6 +29,9 @@ public class SecurityConfig {
 
     @Value("${seatflow.jwt.access-token-expiry-ms:86400000}")
     private long accessTokenExpiryMs;
+
+    @Value("${seatflow.cors.allowed-origins}")
+    private String corsAllowedOrigins;
 
     @Bean
     public JwtTokenProvider jwtTokenProvider() {
@@ -46,8 +51,10 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/bookings/admin").hasAuthority("ROLE_ADMIN")
+                        // Chỉ permitAll cho GET: "/api/bookings/{bookingCode}" khớp bất kỳ segment đơn nào,
+                        // nếu không giới hạn method thì POST /hold và POST /confirm cũng bị lọt vào permitAll.
+                        .requestMatchers(HttpMethod.GET, "/api/bookings/{bookingCode}").permitAll()
                         .requestMatchers(
-                                "/api/bookings/{bookingCode}", // public: get booking by code
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
@@ -63,7 +70,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedOriginPatterns(Arrays.asList(corsAllowedOrigins.split(",")));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

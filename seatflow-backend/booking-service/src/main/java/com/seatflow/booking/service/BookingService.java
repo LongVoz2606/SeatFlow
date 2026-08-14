@@ -48,9 +48,15 @@ public class BookingService {
     @Value("${seatflow.booking.hold-duration-minutes:5}")
     int holdDurationMinutes;
 
+    @Value("${seatflow.booking.max-pending-seats-per-user-event:8}")
+    int maxPendingSeatsPerUserEvent;
+
     @Transactional
     public BookingDtos.BookingResponse holdSeats(BookingDtos.HoldSeatsRequest request, Long authenticatedUserId) {
-        Long userId = authenticatedUserId != null ? authenticatedUserId : request.userId() != null ? request.userId() : 1L;
+        if (authenticatedUserId == null) {
+            throw new UnauthorizedException("Bạn cần đăng nhập để giữ ghế.");
+        }
+        Long userId = authenticatedUserId;
 
         // Idempotency check
         if (StringUtils.hasText(request.idempotencyKey())) {
@@ -58,6 +64,15 @@ public class BookingService {
             if (existing.isPresent()) {
                 throw new BusinessException("IDEMPOTENCY_CONFLICT", "Yêu cầu này đã được hệ thống xử lý trước đó.");
             }
+        }
+
+        // Chặn 1 user giữ quá nhiều ghế PENDING cùng lúc cho 1 sự kiện (chống seat-squatting)
+        long alreadyHeld = bookingRepository.countPendingSeatsByUserAndEvent(
+                userId, request.eventId(), BookingStatus.PENDING, ZonedDateTime.now());
+        if (alreadyHeld + request.seatIds().size() > maxPendingSeatsPerUserEvent) {
+            throw new BusinessException("SEAT_LIMIT_EXCEEDED",
+                    "Bạn chỉ được giữ tối đa " + maxPendingSeatsPerUserEvent
+                            + " ghế đang chờ thanh toán cho sự kiện này. Vui lòng thanh toán hoặc chờ hết hạn giữ chỗ trước khi giữ thêm.");
         }
 
         // Call event-service to hold seats
@@ -116,8 +131,15 @@ public class BookingService {
 
     @Transactional
     public BookingDtos.BookingResponse confirmBooking(String bookingCode, Long authenticatedUserId, String paymentMethod) {
+        if (authenticatedUserId == null) {
+            throw new UnauthorizedException("Bạn cần đăng nhập để xác nhận booking.");
+        }
         BookingEntity booking = bookingRepository.findByBookingCode(bookingCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn đặt vé: " + bookingCode));
+
+        if (!booking.getUserId().equals(authenticatedUserId)) {
+            throw new UnauthorizedException("Bạn không có quyền xác nhận đơn đặt vé này.");
+        }
 
         if (booking.getStatus() == BookingStatus.CONFIRMED) {
             return findByBookingCode(bookingCode).orElse(toResponse(booking, List.of(), ""));
