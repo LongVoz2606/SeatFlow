@@ -67,4 +67,11 @@ public class BookingDtos {
             com.seatflow.common.response.PageResponse<AdminBookingResponse> page,
             BigDecimal totalRevenue
     ) {}
+
+    public record EventRevenueResponse(
+            Long eventId,
+            String eventTitle,
+            long confirmedBookings,
+            BigDecimal totalRevenue
+    ) {}
 }

@@ -94,4 +94,10 @@ public class OrganizerController {
     public ResponseEntity<ApiResponse<OrganizerDtos.OrganizerPublicResponse>> getPublicById(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.ok(organizerQueryService.findPublicById(id)));
     }
+
+    @GetMapping("/internal/by-auth-user/{authUserId}")
+    @Operation(summary = "[Internal] Tra hồ sơ nhà tổ chức theo authUserId (dùng bởi booking-service)")
+    public ResponseEntity<ApiResponse<OrganizerDtos.OrganizerResponse>> getByAuthUserId(@PathVariable Long authUserId) {
+        return ResponseEntity.ok(ApiResponse.ok(organizerQueryService.findMine(authUserId).orElse(null)));
+    }
 }

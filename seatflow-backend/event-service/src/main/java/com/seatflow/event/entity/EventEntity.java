@@ -45,6 +45,9 @@ public class EventEntity {
     @Column(name = "status", nullable = false, length = 20)
     String status;
 
+    @Column(name = "rejection_reason", length = 500)
+    String rejectionReason;
+
     @Column(name = "organizer_id")
     Long organizerId;
 
