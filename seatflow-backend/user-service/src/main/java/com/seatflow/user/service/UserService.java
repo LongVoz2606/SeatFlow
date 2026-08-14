@@ -3,10 +3,12 @@ package com.seatflow.user.service;
 import com.seatflow.common.exception.ResourceNotFoundException;
 import com.seatflow.user.entity.UserProfileEntity;
 import com.seatflow.user.repository.UserProfileRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -14,9 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserProfileRepository userProfileRepository;
+    private final EntityManager entityManager;
 
-    @Transactional(readOnly = true)
-    public UserProfileEntity getProfileByUserId(Long userId, String username, String email) {
+    @Transactional
+    public UserProfileEntity getProfileByUserId(Long userId, String username, String email, String fullName) {
         return userProfileRepository.findByUserId(userId)
                 .orElseGet(() -> {
                     log.info("Creating profile dynamically for userId: {}", userId);
@@ -24,9 +27,11 @@ public class UserService {
                             .userId(userId)
                             .username(username != null ? username : "user_" + userId)
                             .email(email != null ? email : "user_" + userId + "@seatflow.com")
-                            .fullName(username)
+                            .fullName(StringUtils.hasText(fullName) ? fullName : username)
                             .build();
-                    return userProfileRepository.save(profile);
+                    UserProfileEntity saved = userProfileRepository.saveAndFlush(profile);
+                    entityManager.refresh(saved);
+                    return saved;
                 });
     }
 

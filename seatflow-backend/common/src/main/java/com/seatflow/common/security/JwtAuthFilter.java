@@ -49,11 +49,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 Long userId = Long.parseLong(claims.getSubject());
                 String username = claims.get("username", String.class);
                 String role = claims.get("role", String.class);
+                String email = claims.get("email", String.class);
+                String fullName = claims.get("fullName", String.class);
 
                 // Store user info in request attributes for downstream use
                 request.setAttribute("userId", userId);
                 request.setAttribute("username", username);
                 request.setAttribute("role", role);
+                request.setAttribute("email", email);
+                request.setAttribute("fullName", fullName);
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(

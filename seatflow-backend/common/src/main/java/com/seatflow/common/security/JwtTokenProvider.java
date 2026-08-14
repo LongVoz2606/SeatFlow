@@ -31,7 +31,7 @@ public class JwtTokenProvider {
     /**
      * Generate access token with user claims.
      */
-    public String generateAccessToken(Long userId, String username, String role) {
+    public String generateAccessToken(Long userId, String username, String role, String email, String fullName) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + accessTokenExpiryMs);
 
@@ -39,7 +39,9 @@ public class JwtTokenProvider {
                 .subject(String.valueOf(userId))
                 .claims(Map.of(
                         "username", username,
-                        "role", role
+                        "role", role,
+                        "email", email == null ? "" : email,
+                        "fullName", fullName == null ? "" : fullName
                 ))
                 .issuedAt(now)
                 .expiration(expiry)

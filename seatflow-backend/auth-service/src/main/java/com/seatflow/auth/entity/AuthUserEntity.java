@@ -37,6 +37,11 @@ public class AuthUserEntity {
     @Builder.Default
     AuthRole role = AuthRole.USER;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "provider", nullable = false, length = 20)
+    @Builder.Default
+    AuthProvider provider = AuthProvider.LOCAL;
+
     @Column(name = "enabled", nullable = false)
     @Builder.Default
     boolean enabled = true;
