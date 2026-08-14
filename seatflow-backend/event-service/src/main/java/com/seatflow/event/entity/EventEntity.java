@@ -51,6 +51,13 @@ public class EventEntity {
     @Column(name = "organizer_id")
     Long organizerId;
 
+    /**
+     * NULL = sự kiện độc lập (kiểu cũ) hoặc "show" cha có nhiều suất diễn.
+     * Khác NULL = đây là một suất diễn (session) cụ thể thuộc về sự kiện cha.
+     */
+    @Column(name = "parent_event_id")
+    Long parentEventId;
+
     @Column(name = "is_hot", nullable = false)
     @Builder.Default
     Boolean isHot = false;

@@ -23,16 +23,59 @@ public class EventDtos {
             BigDecimal maxPrice,
             String category,
             ZonedDateTime createdAt,
-            String rejectionReason
+            String rejectionReason,
+            Integer sessionCount
     ) {}
 
     public record SeatResponse(
             Long id,
             Long eventId,
+            Long zoneId,
+            Integer rowIndex,
+            Integer colIndex,
             String seatNumber,
             String seatRow,
             String seatType,
             BigDecimal price,
+            String status
+    ) {}
+
+    public record ZoneRequest(
+            String name,
+            String seatType,
+            BigDecimal price,
+            Integer rowCount,
+            Integer colCount,
+            BigDecimal rowSpacing,
+            BigDecimal colSpacing,
+            BigDecimal curveAngle,
+            BigDecimal positionX,
+            BigDecimal positionY,
+            BigDecimal rotation,
+            String color
+    ) {}
+
+    public record ZoneResponse(
+            Long id,
+            String name,
+            String seatType,
+            BigDecimal price,
+            Integer rowCount,
+            Integer colCount,
+            BigDecimal rowSpacing,
+            BigDecimal colSpacing,
+            BigDecimal curveAngle,
+            BigDecimal positionX,
+            BigDecimal positionY,
+            BigDecimal rotation,
+            String color
+    ) {}
+
+    public record SessionResponse(
+            Long id,
+            ZonedDateTime sessionDate,
+            Integer totalSeats,
+            Integer availableSeats,
             String status
     ) {}
 
@@ -48,28 +91,26 @@ public class EventDtos {
             String status,
             Long organizerId,
             String organizerName,
+            String organizerDescription,
+            String organizerLogoUrl,
             Boolean isHot,
             BigDecimal minPrice,
             BigDecimal maxPrice,
             String category,
+            Long parentEventId,
+            List<ZoneResponse> zones,
+            List<SessionResponse> sessions,
             List<SeatResponse> seats
-    ) {}
-
-    public record SeatSectionRequest(
-            String rowLabel,
-            Integer seatCount,
-            String seatType,
-            BigDecimal price
     ) {}
 
     public record CreateEventRequest(
             String title,
             String description,
             String location,
-            ZonedDateTime eventDate,
             String bannerUrl,
             String category,
-            List<SeatSectionRequest> seatSections
+            List<ZonedDateTime> sessionDates,
+            List<ZoneRequest> zones
     ) {}
 
     public record SetHotRequest(

@@ -5,6 +5,9 @@ export type EOrganizerStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 export interface ISeat {
   id: number;
   eventId: number;
+  zoneId?: number | null;
+  rowIndex?: number | null;
+  colIndex?: number | null;
   seatNumber: string;
   seatRow: string;
   seatType: string;
@@ -12,6 +15,30 @@ export interface ISeat {
   status: ESeatStatus;
   heldUntil?: string;
   heldByUserId?: number;
+}
+
+export interface IZone {
+  id: number;
+  name: string;
+  seatType: string;
+  price: number;
+  rowCount: number;
+  colCount: number;
+  rowSpacing: number;
+  colSpacing: number;
+  curveAngle: number;
+  positionX: number;
+  positionY: number;
+  rotation: number;
+  color?: string | null;
+}
+
+export interface ISession {
+  id: number;
+  sessionDate: string;
+  totalSeats: number;
+  availableSeats: number;
+  status: string;
 }
 
 export interface IEvent {
@@ -26,10 +53,18 @@ export interface IEvent {
   status: string;
   organizerId?: number;
   organizerName?: string;
+  organizerDescription?: string | null;
+  organizerLogoUrl?: string | null;
   isHot: boolean;
   minPrice: number;
   maxPrice: number;
   category: string;
+  createdAt?: string;
+  rejectionReason?: string | null;
+  sessionCount?: number;
+  parentEventId?: number | null;
+  zones?: IZone[];
+  sessions?: ISession[];
   seats?: ISeat[];
 }
 

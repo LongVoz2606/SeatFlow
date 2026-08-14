@@ -6,9 +6,11 @@ import com.seatflow.event.entity.EventEntity;
 import com.seatflow.event.entity.OrganizerEntity;
 import com.seatflow.event.entity.SeatEntity;
 import com.seatflow.event.entity.SeatStatus;
+import com.seatflow.event.entity.ZoneEntity;
 import com.seatflow.event.repository.EventRepository;
 import com.seatflow.event.repository.OrganizerRepository;
 import com.seatflow.event.repository.SeatRepository;
+import com.seatflow.event.repository.ZoneRepository;
 import com.seatflow.event.specification.EventSearchCriteria;
 import com.seatflow.event.specification.EventSpecification;
 import lombok.AccessLevel;
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZonedDateTime;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +37,7 @@ public class EventQueryService {
     EventRepository eventRepository;
     SeatRepository seatRepository;
     OrganizerRepository organizerRepository;
+    ZoneRepository zoneRepository;
 
     @Transactional(readOnly = true)
     public List<EventDtos.EventResponse> searchEvents(EventSearchCriteria criteria) {
@@ -53,13 +57,13 @@ public class EventQueryService {
     public List<EventDtos.EventResponse> findMyEvents(Long organizerAuthUserId) {
         OrganizerEntity organizer = organizerRepository.findByAuthUserId(organizerAuthUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Bạn chưa đăng ký làm nhà tổ chức."));
-        List<EventEntity> events = eventRepository.findByOrganizerIdOrderByEventDateDesc(organizer.getId());
+        List<EventEntity> events = eventRepository.findByOrganizerIdAndParentEventIdIsNullOrderByEventDateDesc(organizer.getId());
         return toEventResponses(events);
     }
 
     @Transactional(readOnly = true)
     public List<EventDtos.EventResponse> findPendingEvents() {
-        List<EventEntity> events = eventRepository.findByStatusOrderByEventDateAsc("PENDING");
+        List<EventEntity> events = eventRepository.findByStatusAndParentEventIdIsNullOrderByEventDateAsc("PENDING");
         return toEventResponses(events);
     }
 
@@ -74,43 +78,92 @@ public class EventQueryService {
             organizerRepository.findAllById(organizerIds)
                     .forEach(o -> organizerNames.put(o.getId(), o.getOrganizationName()));
         }
-        return events.stream().map(e -> toEventResponse(e, organizerNames)).toList();
+
+        List<Long> eventIds = events.stream().map(EventEntity::getId).toList();
+        Map<Long, Integer> sessionCounts = new HashMap<>();
+        if (!eventIds.isEmpty()) {
+            eventRepository.countSessionsByParentIds(eventIds)
+                    .forEach(row -> sessionCounts.put((Long) row[0], ((Long) row[1]).intValue()));
+        }
+
+        return events.stream().map(e -> toEventResponse(e, organizerNames, sessionCounts)).toList();
     }
 
+    /**
+     * Chi tiết sự kiện dùng cho trang xem/mua vé.
+     * - Nếu id là event cha có suất diễn con: trả về thông tin chung + danh sách khu vực (loại vé/giá)
+     *   + danh sách suất diễn để người dùng chọn, KHÔNG có sơ đồ ghế (mỗi suất diễn có sơ đồ riêng).
+     * - Nếu id là 1 suất diễn cụ thể, hoặc 1 sự kiện độc lập kiểu cũ: trả về đầy đủ sơ đồ ghế như trước.
+     */
     @Transactional(readOnly = true)
-    public Optional<EventDtos.EventDetailResponse> findByIdWithSeatMap(Long eventId) {
+    public Optional<EventDtos.EventDetailResponse> findEventDetail(Long eventId) {
         return eventRepository.findById(eventId).map(event -> {
-            List<SeatEntity> seats = seatRepository.findByEventIdOrderBySeatRowAscSeatNumberAsc(eventId);
-            String organizerName = event.getOrganizerId() != null
-                    ? organizerRepository.findById(event.getOrganizerId())
-                            .map(OrganizerEntity::getOrganizationName).orElse(null)
+            boolean isParentShow = eventRepository.existsByParentEventId(eventId);
+
+            OrganizerEntity organizer = event.getOrganizerId() != null
+                    ? organizerRepository.findById(event.getOrganizerId()).orElse(null)
                     : null;
+
+            Long zoneOwnerEventId = isParentShow ? eventId : event.getParentEventId();
+            List<EventDtos.ZoneResponse> zones = zoneOwnerEventId != null
+                    ? zoneRepository.findByEventIdOrderByIdAsc(zoneOwnerEventId).stream().map(this::toZoneResponse).toList()
+                    : Collections.emptyList();
+
+            List<EventDtos.SessionResponse> sessions;
+            List<EventDtos.SeatResponse> seats;
+            if (isParentShow) {
+                sessions = eventRepository.findByParentEventIdOrderByEventDateAsc(eventId).stream()
+                        .map(this::toSessionResponse).toList();
+                seats = Collections.emptyList();
+            } else {
+                sessions = Collections.emptyList();
+                seats = seatRepository.findByEventIdOrderBySeatRowAscSeatNumberAsc(eventId).stream()
+                        .map(this::toSeatResponse).toList();
+            }
+
             return new EventDtos.EventDetailResponse(
                     event.getId(), event.getTitle(), event.getDescription(),
                     event.getLocation(), event.getEventDate(), event.getBannerUrl(),
                     event.getTotalSeats(), event.getAvailableSeats(), event.getStatus(),
-                    event.getOrganizerId(), organizerName, event.getIsHot(),
-                    event.getMinPrice(), event.getMaxPrice(), event.getCategory(),
-                    seats.stream().map(this::toSeatResponse).toList()
+                    event.getOrganizerId(), organizer != null ? organizer.getOrganizationName() : null,
+                    organizer != null ? organizer.getDescription() : null,
+                    organizer != null ? organizer.getLogoUrl() : null,
+                    event.getIsHot(), event.getMinPrice(), event.getMaxPrice(), event.getCategory(),
+                    event.getParentEventId(), zones, sessions, seats
             );
         });
     }
 
-    public EventDtos.EventResponse toEventResponse(EventEntity e, Map<Long, String> organizerNames) {
+    public EventDtos.EventResponse toEventResponse(EventEntity e, Map<Long, String> organizerNames, Map<Long, Integer> sessionCounts) {
         return new EventDtos.EventResponse(
                 e.getId(), e.getTitle(), e.getDescription(), e.getLocation(),
                 e.getEventDate(), e.getBannerUrl(), e.getTotalSeats(),
                 e.getAvailableSeats(), e.getStatus(),
                 e.getOrganizerId(), e.getOrganizerId() != null ? organizerNames.get(e.getOrganizerId()) : null,
                 e.getIsHot(), e.getMinPrice(), e.getMaxPrice(), e.getCategory(), e.getCreatedAt(),
-                e.getRejectionReason()
+                e.getRejectionReason(), sessionCounts.getOrDefault(e.getId(), 0)
         );
     }
 
     public EventDtos.SeatResponse toSeatResponse(SeatEntity s) {
         return new EventDtos.SeatResponse(
-                s.getId(), s.getEventId(), s.getSeatNumber(),
+                s.getId(), s.getEventId(), s.getZoneId(), s.getRowIndex(), s.getColIndex(), s.getSeatNumber(),
                 s.getSeatRow(), s.getSeatType(), s.getPrice(), s.getStatus().name()
+        );
+    }
+
+    public EventDtos.ZoneResponse toZoneResponse(ZoneEntity z) {
+        return new EventDtos.ZoneResponse(
+                z.getId(), z.getName(), z.getSeatType(), z.getPrice(), z.getRowCount(), z.getColCount(),
+                z.getRowSpacing(), z.getColSpacing(), z.getCurveAngle(), z.getPositionX(), z.getPositionY(),
+                z.getRotation(), z.getColor()
+        );
+    }
+
+    public EventDtos.SessionResponse toSessionResponse(EventEntity session) {
+        return new EventDtos.SessionResponse(
+                session.getId(), session.getEventDate(), session.getTotalSeats(),
+                session.getAvailableSeats(), session.getStatus()
         );
     }
 

@@ -10,6 +10,7 @@ import { CreateEventForm } from './components/CreateEventForm';
 export const OrganizerDashboardPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [activeTab, setActiveTab] = useState<'events' | 'analytics' | 'terms' | 'settings'>('events');
 
   const { data: organizer, isLoading } = useQuery({
     queryKey: ['organizer-me'],
@@ -82,8 +83,6 @@ export const OrganizerDashboardPage: React.FC = () => {
       </>
     );
   }
-
-  const [activeTab, setActiveTab] = useState<'events' | 'analytics' | 'terms' | 'settings'>('events');
 
   // APPROVED VIEW (Material You MD3 Organization Portal)
   return (
