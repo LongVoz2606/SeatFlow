@@ -322,20 +322,10 @@ export const EventDetailPage: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <button
-                  disabled={selectedSeats.length === 0 || holdMutation.isPending}
-                  onClick={() => holdMutation.mutate()}
-                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 transition-all"
-                >
-                  {holdMutation.isPending ? (
-                    <span>Đang giữ ghế...</span>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Giữ ghế & Thanh toán (5 phút)</span>
-                    </>
-                  )}
-                </button>
+                <>
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Giữ ghế & Thanh toán (15 phút)</span>
+                </>
               )}
             </div>
           )}

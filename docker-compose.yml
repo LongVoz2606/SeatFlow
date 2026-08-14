@@ -155,7 +155,7 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       JWT_SECRET: seatflow-super-secret-key-for-jwt-signing-must-be-at-least-256-bits
       EVENT_SERVICE_URL: http://event-service:8083
-      BOOKING_HOLD_MINUTES: 5
+      BOOKING_HOLD_MINUTES: 15
     depends_on:
       postgres:
         condition: service_healthy
