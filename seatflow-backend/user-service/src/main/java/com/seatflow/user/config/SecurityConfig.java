@@ -6,6 +6,7 @@ import com.seatflow.common.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -49,8 +50,10 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Chỉ permitAll cho GET: "/api/users/{id}" khớp bất kỳ segment đơn nào (kể cả "me"),
+                        // nếu không giới hạn method thì PUT /me cũng bị lọt vào permitAll.
+                        .requestMatchers(HttpMethod.GET, "/api/users/{id}").permitAll()
                         .requestMatchers(
-                                "/api/users/{id}",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",

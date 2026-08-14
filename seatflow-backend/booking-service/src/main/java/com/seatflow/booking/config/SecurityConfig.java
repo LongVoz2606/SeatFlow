@@ -6,6 +6,7 @@ import com.seatflow.common.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -50,8 +51,10 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/bookings/admin").hasAuthority("ROLE_ADMIN")
+                        // Chỉ permitAll cho GET: "/api/bookings/{bookingCode}" khớp bất kỳ segment đơn nào,
+                        // nếu không giới hạn method thì POST /hold và POST /confirm cũng bị lọt vào permitAll.
+                        .requestMatchers(HttpMethod.GET, "/api/bookings/{bookingCode}").permitAll()
                         .requestMatchers(
-                                "/api/bookings/{bookingCode}", // public: get booking by code
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
