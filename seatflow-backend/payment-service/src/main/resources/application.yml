@@ -27,6 +27,8 @@ server:
 seatflow:
   jwt:
     secret: ${JWT_SECRET:seatflow-super-secret-key-for-jwt-signing-must-be-at-least-256-bits}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost,http://localhost:3000}
 
 management:
   endpoints:
