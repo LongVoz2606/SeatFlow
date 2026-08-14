@@ -57,6 +57,12 @@ public class EventQueryService {
         return toEventResponses(events);
     }
 
+    @Transactional(readOnly = true)
+    public List<EventDtos.EventResponse> findPendingEvents() {
+        List<EventEntity> events = eventRepository.findByStatusOrderByEventDateAsc("PENDING");
+        return toEventResponses(events);
+    }
+
     private List<EventDtos.EventResponse> toEventResponses(List<EventEntity> events) {
         List<Long> organizerIds = events.stream()
                 .map(EventEntity::getOrganizerId)
@@ -96,7 +102,8 @@ public class EventQueryService {
                 e.getEventDate(), e.getBannerUrl(), e.getTotalSeats(),
                 e.getAvailableSeats(), e.getStatus(),
                 e.getOrganizerId(), e.getOrganizerId() != null ? organizerNames.get(e.getOrganizerId()) : null,
-                e.getIsHot(), e.getMinPrice(), e.getMaxPrice(), e.getCategory(), e.getCreatedAt()
+                e.getIsHot(), e.getMinPrice(), e.getMaxPrice(), e.getCategory(), e.getCreatedAt(),
+                e.getRejectionReason()
         );
     }
 

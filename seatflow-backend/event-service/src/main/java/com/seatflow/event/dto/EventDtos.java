@@ -22,7 +22,8 @@ public class EventDtos {
             BigDecimal minPrice,
             BigDecimal maxPrice,
             String category,
-            ZonedDateTime createdAt
+            ZonedDateTime createdAt,
+            String rejectionReason
     ) {}
 
     public record SeatResponse(
@@ -73,6 +74,10 @@ public class EventDtos {
 
     public record SetHotRequest(
             Boolean isHot
+    ) {}
+
+    public record RejectEventRequest(
+            String reason
     ) {}
 
     // Internal API DTOs (used by booking-service via Feign)

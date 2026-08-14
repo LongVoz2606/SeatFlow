@@ -12,6 +12,7 @@ import com.seatflow.booking.repository.BookingRepository;
 import com.seatflow.booking.repository.OutboxEventRepository;
 import com.seatflow.common.exception.BusinessException;
 import com.seatflow.common.exception.ResourceNotFoundException;
+import com.seatflow.common.exception.UnauthorizedException;
 import com.seatflow.common.response.ApiResponse;
 import com.seatflow.common.response.PageResponse;
 import lombok.AccessLevel;
@@ -187,6 +188,29 @@ public class BookingService {
                 PageResponse.of(content, page, size, result.getTotalElements());
         BigDecimal totalRevenue = bookingRepository.sumTotalAmountByStatus(BookingStatus.CONFIRMED);
         return new BookingDtos.AdminBookingListResponse(pageResponse, totalRevenue);
+    }
+
+    @Transactional(readOnly = true)
+    public BookingDtos.EventRevenueResponse getEventRevenue(Long eventId, Long authenticatedUserId, String role) {
+        ApiResponse<EventServiceClient.EventDetailResponse> eventRes = eventServiceClient.getEventDetail(eventId);
+        if (eventRes == null || eventRes.getData() == null) {
+            throw new ResourceNotFoundException("Không tìm thấy sự kiện ID: " + eventId);
+        }
+        EventServiceClient.EventDetailResponse event = eventRes.getData();
+
+        if (!"ADMIN".equals(role)) {
+            ApiResponse<EventServiceClient.OrganizerLookupResponse> organizerRes =
+                    eventServiceClient.getOrganizerByAuthUserId(authenticatedUserId);
+            EventServiceClient.OrganizerLookupResponse organizer =
+                    organizerRes != null ? organizerRes.getData() : null;
+            if (organizer == null || !organizer.id().equals(event.organizerId())) {
+                throw new UnauthorizedException("Bạn không có quyền xem doanh thu sự kiện này.");
+            }
+        }
+
+        BigDecimal totalRevenue = bookingRepository.sumTotalAmountByEventIdAndStatus(eventId, BookingStatus.CONFIRMED);
+        long confirmedBookings = bookingRepository.countByEventIdAndStatus(eventId, BookingStatus.CONFIRMED);
+        return new BookingDtos.EventRevenueResponse(eventId, event.title(), confirmedBookings, totalRevenue);
     }
 
     /** Auto-expire pending bookings every 10 seconds */

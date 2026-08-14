@@ -75,4 +75,16 @@ public class BookingController {
             @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(ApiResponse.ok(bookingService.findAllForAdmin(page, size)));
     }
+
+    @GetMapping("/events/{eventId}/revenue")
+    @Operation(summary = "[Organizer/Admin] Doanh thu của một sự kiện")
+    public ResponseEntity<ApiResponse<BookingDtos.EventRevenueResponse>> getEventRevenue(
+            @PathVariable Long eventId, HttpServletRequest httpRequest) {
+        Long userId = (Long) httpRequest.getAttribute("userId");
+        String role = (String) httpRequest.getAttribute("role");
+        if (userId == null) {
+            return ResponseEntity.status(401).body(ApiResponse.error("UNAUTHORIZED", "Bạn chưa đăng nhập."));
+        }
+        return ResponseEntity.ok(ApiResponse.ok(bookingService.getEventRevenue(eventId, userId, role)));
+    }
 }

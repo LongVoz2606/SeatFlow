@@ -92,6 +92,28 @@ public class EventController {
         return ResponseEntity.ok(ApiResponse.ok(null, "Cập nhật thành công."));
     }
 
+    @GetMapping("/pending")
+    @Operation(summary = "[Admin] Danh sách sự kiện đang chờ duyệt")
+    public ResponseEntity<ApiResponse<List<EventDtos.EventResponse>>> getPendingEvents() {
+        return ResponseEntity.ok(ApiResponse.ok(eventQueryService.findPendingEvents()));
+    }
+
+    @PatchMapping("/{id}/approve")
+    @Operation(summary = "[Admin] Duyệt sự kiện đang chờ để công khai")
+    public ResponseEntity<ApiResponse<Void>> approveEvent(@PathVariable Long id) {
+        eventCommandService.approveEvent(id);
+        return ResponseEntity.ok(ApiResponse.ok(null, "Đã duyệt sự kiện."));
+    }
+
+    @PatchMapping("/{id}/reject")
+    @Operation(summary = "[Admin] Từ chối sự kiện đang chờ duyệt")
+    public ResponseEntity<ApiResponse<Void>> rejectEvent(
+            @PathVariable Long id,
+            @RequestBody EventDtos.RejectEventRequest request) {
+        eventCommandService.rejectEvent(id, request.reason());
+        return ResponseEntity.ok(ApiResponse.ok(null, "Đã từ chối sự kiện."));
+    }
+
     // ===== Internal APIs (called by booking-service) =====
 
     @PostMapping("/{eventId}/seats/hold")
